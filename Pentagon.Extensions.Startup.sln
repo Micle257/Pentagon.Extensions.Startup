@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pentagon.Extensions.Startup", "src\Pentagon.Extensions.Startup\Pentagon.Extensions.Startup.csproj", "{128FC14A-1981-4C76-8F18-30C49916219A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pentagon.Extensions.Startup.Cli", "src\Pentagon.Extensions.Startup.Cli\Pentagon.Extensions.Startup.Cli.csproj", "{BEA506A1-F0D8-46CB-A967-215A1B716206}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{128FC14A-1981-4C76-8F18-30C49916219A}.Release|x64.Build.0 = Release|Any CPU
 		{128FC14A-1981-4C76-8F18-30C49916219A}.Release|x86.ActiveCfg = Release|Any CPU
 		{128FC14A-1981-4C76-8F18-30C49916219A}.Release|x86.Build.0 = Release|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Debug|x64.Build.0 = Debug|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Debug|x86.Build.0 = Debug|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Release|x64.ActiveCfg = Release|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Release|x64.Build.0 = Release|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Release|x86.ActiveCfg = Release|Any CPU
+		{BEA506A1-F0D8-46CB-A967-215A1B716206}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
