@@ -4,11 +4,15 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Michal Pokorný</Authors>
     <Product>Pentagon.Extensions.Startup</Product>
-    <Description>...</Description>
+    <Description>Provides startup pattern similar to ASP.NET Core logic.</Description>
     <Copyright>Copyright (c) Michal Pokorný. All Rights Reserved.</Copyright>
+    <PackageTags>net netstandard</PackageTags>
+    <PackageProjectUrl>https://github.com/Micle257/Pentagon.Extensions.Startup</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/Micle257/Pentagon.Extensions.Startup/dev/LICENSE</PackageLicenseUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <LangVersion>7.2</LangVersion>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
