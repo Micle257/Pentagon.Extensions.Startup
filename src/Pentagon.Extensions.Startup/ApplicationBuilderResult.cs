@@ -20,6 +20,17 @@ namespace Pentagon.Extensions.Startup
         }
 
         public IServiceProvider Provider { get; }
+
         public IList<(LogLevel Level, LoggerState State, Exception Exception)> Log { get; }
+
+        public void ApplyLogMessages(ILogger logger)
+        {
+            foreach (var msg in Log)
+                logger.Log(msg.Level,
+                           new EventId(0),
+                           msg.State,
+                           msg.Exception,
+                           (state, exception) => LoggerSourceFormatter.Format(new object[] {state.Message, state.MethodName, state.FilePath, state.LineNumber}, exception));
+        }
     }
 }
