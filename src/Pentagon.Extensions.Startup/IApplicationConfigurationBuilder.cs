@@ -23,8 +23,9 @@ namespace Pentagon.Extensions.Startup
 
         IApplicationConfigurationBuilder AddLogging();
         IApplicationConfigurationBuilder AddLogging(Action<ILoggingBuilder> configure);
-        IApplicationConfigurationBuilder AddLogging(string defaultLoggerName, Action<ILoggingBuilder> configure);
-        IApplicationConfigurationBuilder AddLogging(string defaultLoggerName);
+        IApplicationConfigurationBuilder AddLogging(IConfiguration configuration);
+        IApplicationConfigurationBuilder AddLogging(IConfiguration configuration, Action<ILoggingBuilder> configure);
+        IApplicationConfigurationBuilder AddDefaultLogger(string name);
 
         ApplicationBuilderResult Build();
 

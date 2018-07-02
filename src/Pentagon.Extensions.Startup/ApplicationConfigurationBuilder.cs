@@ -17,7 +17,7 @@ namespace Pentagon.Extensions.Startup
 
     public class ApplicationConfigurationBuilder : IApplicationConfigurationBuilder
     {
-        string _defaultLoggerName;
+        string _defaultLoggerName = "Unspecified";
         bool _isLoggingAdded;
         public IList<(LogLevel Level, LoggerState State, Exception Exception)> BuildLog { get; } = new List<(LogLevel Level, LoggerState State, Exception Exception)>();
 
@@ -61,18 +61,23 @@ namespace Pentagon.Extensions.Startup
         }
 
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder AddLogging() => AddLogging(defaultLoggerName: "Unspecified", configure: null);
+        public IApplicationConfigurationBuilder AddLogging() => AddLogging(configure: null);
 
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder AddLogging(Action<ILoggingBuilder> configure) => AddLogging(defaultLoggerName: "Unspecified", configure: configure);
+        public IApplicationConfigurationBuilder AddLogging(Action<ILoggingBuilder> configure)
+            => AddLogging(Configuration.GetSection("Logging"), configure);
 
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder AddLogging(string defaultLoggerName, Action<ILoggingBuilder> configure)
+        public IApplicationConfigurationBuilder AddLogging(IConfiguration configuration)
+            => AddLogging(configuration, null);
+
+        /// <inheritdoc />
+        public IApplicationConfigurationBuilder AddLogging(IConfiguration configuration, Action<ILoggingBuilder> configure)
         {
             Services.AddLogging(options =>
                                 {
                                     if (Configuration != null)
-                                        options.AddConfiguration(Configuration.GetSection(key: "Logging"));
+                                        options.AddConfiguration(configuration);
                                     else
                                         BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "Configuration is not specified. Default logging option are used."), null));
 
@@ -82,21 +87,24 @@ namespace Pentagon.Extensions.Startup
                                     configure?.Invoke(options);
                                 });
 
-            _defaultLoggerName = defaultLoggerName;
-
             _isLoggingAdded = true;
             return this;
         }
 
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder AddLogging(string defaultLoggerName) => AddLogging(defaultLoggerName, null);
+        public IApplicationConfigurationBuilder AddDefaultLogger(string name)
+        {
+            _defaultLoggerName = name;
+
+            return this;
+        }
         
         /// <inheritdoc />
         public ApplicationBuilderResult Build()
         {
             if (Environment == null)
             {
-                Environment = new ApplicationEnvironment("Unknown");
+                Environment = new ApplicationEnvironment("Unspecified");
                 BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "Environment is not specified."), null));
             }
 
