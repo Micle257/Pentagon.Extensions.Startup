@@ -8,6 +8,7 @@ namespace Pentagon.Extensions.Startup
 {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
     using Logging;
     using Microsoft.Extensions.Logging;
 
