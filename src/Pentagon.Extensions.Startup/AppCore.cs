@@ -8,11 +8,13 @@
 
     public abstract class AppCore
     {
+		IApplicationBuilder _builder;
+		
         public IServiceProvider Services { get; private set; }
 
-        public IApplicationEnvironment Environment { get; private set; }
+        public IApplicationEnvironment Environment => _builder.Environment;
 
-        public IConfiguration Configuration { get; private set; }
+        public IConfiguration Configuration => _builder.Configuration;
 
         protected bool StartupCalled { get; private set; }
 
@@ -23,17 +25,14 @@
 
             StartupCalled = true;
 
-            var builder = new ApplicationBuilder();
+            _builder = new ApplicationBuilder();
 
-            Configuration = builder.Configuration;
-            Environment = builder.Environment;
-
-            builder.AddLogging()
+            _builder.AddLogging()
                    .AddCommandLineArguments(args);
 
-            BuildApp(builder, args);
+            BuildApp(_builder, args);
                         
-            var result = builder.Build();
+            var result = _builder.Build();
 
             Services = result.Provider;
             
