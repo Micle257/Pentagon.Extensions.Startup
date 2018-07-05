@@ -23,13 +23,16 @@
 
             StartupCalled = true;
 
-            var builder = new ApplicationConfigurationBuilder();
+            var builder = new ApplicationBuilder();
+
             Configuration = builder.Configuration;
+            Environment = builder.Environment;
+
+            builder.AddLogging()
+                   .AddCommandLineArguments(args);
 
             BuildApp(builder, args);
-            
-            Environment = builder.Environment;
-            
+                        
             var result = builder.Build();
 
             Services = result.Provider;
@@ -39,7 +42,7 @@
             ConfigureUnhandledExceptionHandling();
         }
         
-        protected abstract void BuildApp(IApplicationConfigurationBuilder appBuilder, string[] args);
+        protected abstract void BuildApp(IApplicationBuilder appBuilder, string[] args);
 
         void ConfigureUnhandledExceptionHandling()
         {

@@ -8,11 +8,13 @@ namespace Pentagon.Extensions.Startup
 {
     public class ApplicationEnvironment : IApplicationEnvironment
     {
-        internal ApplicationEnvironment(string name)
-        {
-            Name = name;
-        }
+        /// <inheritdoc />
+        public string EnvironmentName { get; set; }
 
-        public string Name { get; }
+        /// <inheritdoc />
+        public string ApplicationName { get; set; }
+
+        /// <inheritdoc />
+        public string ContentRootPath { get; set; }
     }
 }
