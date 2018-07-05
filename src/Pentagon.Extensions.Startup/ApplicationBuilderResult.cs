@@ -31,7 +31,7 @@ namespace Pentagon.Extensions.Startup
                            new EventId(0),
                            msg.State,
                            msg.Exception,
-                           (state, exception) => LoggerSourceFormatter.Format(new object[] {state.Message, state.MethodName, state.FilePath, state.LineNumber}, exception));
+                           (state, exception) => LoggerSourceFormatter.Format(state.GetRawState(), exception));
         }
     }
 }
