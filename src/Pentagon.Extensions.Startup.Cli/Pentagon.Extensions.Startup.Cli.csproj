@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Michal Pokorný</Authors>
+    <Product>Pentagon.Extensions.Startup.Cli</Product>
+    <Description>...</Description>
+    <Copyright>Copyright (c) Michal Pokorný. All Rights Reserved.</Copyright>
+    <PackageTags>net netstandard</PackageTags>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>1.0.2</Version>
+    <LangVersion>7.2</LangVersion>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

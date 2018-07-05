@@ -29,7 +29,7 @@ namespace Pentagon.Extensions.Startup.Cli
 
         public virtual void OnExit(bool success)
         {
-            if (Environment.Name == ApplicationEnvironmentNames.Development)
+            if (Environment.EnvironmentName == ApplicationEnvironmentNames.Development)
             {
                 Console.WriteLine();
                 if (!success)
@@ -41,7 +41,7 @@ namespace Pentagon.Extensions.Startup.Cli
                 Console.WriteLine(value: " Press any key to exit the application...");
                 Console.ReadKey();
             }
-            else if (Environment.Name == ApplicationEnvironmentNames.Production && !success)
+            else if (Environment.EnvironmentName == ApplicationEnvironmentNames.Production && !success)
             {
                 ConsoleHelper.WriteError(errorValue: "Program execution failed.");
                 Console.WriteLine();
