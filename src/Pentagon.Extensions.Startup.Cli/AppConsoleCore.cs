@@ -1,7 +1,12 @@
-﻿using System;
+﻿// -----------------------------------------------------------------------
+//  <copyright file="AppConsoleCore.cs">
+//   Copyright (c) Michal Pokorný. All Rights Reserved.
+//  </copyright>
+// -----------------------------------------------------------------------
 
 namespace Pentagon.Extensions.Startup.Cli
 {
+    using System;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -9,24 +14,6 @@ namespace Pentagon.Extensions.Startup.Cli
 
     public abstract class AppConsoleCore : AppCore
     {
-        public async Task RunCommand<TCommand, TOptions>(TOptions options, Action failCallback)
-                where TCommand : ICliCommand<TOptions>
-        {
-            try
-            {
-                var command = Services.GetService<TCommand>();
-
-                await command.RunAsync(options);
-            }
-            catch (Exception e)
-            {
-                Services.GetService<ILogger>()?.LogCritical(e, message: "Error while running play command.");
-                failCallback();
-                throw;
-            }
-
-        }
-
         public virtual void OnExit(bool success)
         {
             if (Environment.EnvironmentName == ApplicationEnvironmentNames.Development)
@@ -45,6 +32,23 @@ namespace Pentagon.Extensions.Startup.Cli
             {
                 ConsoleHelper.WriteError(errorValue: "Program execution failed.");
                 Console.WriteLine();
+            }
+        }
+
+        public async Task RunCommand<TCommand, TOptions>(TOptions options, Action failCallback)
+                where TCommand : ICliCommand<TOptions>
+        {
+            try
+            {
+                var command = Services.GetService<TCommand>();
+
+                await command.RunAsync(options);
+            }
+            catch (Exception e)
+            {
+                Services.GetService<ILogger>()?.LogCritical(e, message: "Error while running play command.");
+                failCallback();
+                throw;
             }
         }
     }
