@@ -8,7 +8,7 @@
     <Copyright>Copyright (c) Michal Pokorný. All Rights Reserved.</Copyright>
     <PackageTags>net netstandard</PackageTags>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.0.3</Version>
+    <Version>1.1.0</Version>
     <LangVersion>7.2</LangVersion>
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
@@ -23,6 +23,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2018.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Pentagon.Utilities.Console" Version="1.1.0" />
     <ProjectReference Include="..\Pentagon.Extensions.Startup\Pentagon.Extensions.Startup.csproj" />

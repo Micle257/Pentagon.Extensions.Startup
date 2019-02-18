@@ -10,7 +10,7 @@
     <PackageProjectUrl>https://github.com/Micle257/Pentagon.Extensions.Startup</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/Micle257/Pentagon.Extensions.Startup/dev/LICENSE</PackageLicenseUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.0.6</Version>
+    <Version>1.1.0</Version>
     <LangVersion>7.2</LangVersion>
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
@@ -25,6 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2018.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.0" />
