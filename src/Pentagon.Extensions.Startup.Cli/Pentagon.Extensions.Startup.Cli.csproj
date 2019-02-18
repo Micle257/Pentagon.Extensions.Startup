@@ -3,18 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Michal Pokorný</Authors>
-    <Product>Pentagon.Extensions.Startup</Product>
-    <Description>Provides startup pattern similar to ASP.NET Core logic.</Description>
+    <Product>Pentagon.Extensions.Startup.Cli</Product>
+    <Description>...</Description>
     <Copyright>Copyright (c) Michal Pokorný. All Rights Reserved.</Copyright>
     <PackageTags>net netstandard</PackageTags>
-    <PackageProjectUrl>https://github.com/Micle257/Pentagon.Extensions.Startup</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/Micle257/Pentagon.Extensions.Startup/dev/LICENSE</PackageLicenseUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Version>1.1.0</Version>
     <LangVersion>7.2</LangVersion>
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\..\build\$(AssemblyName)\</OutputPath>
     <DocumentationFile>..\..\build\$(AssemblyName)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
@@ -26,15 +24,9 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2018.3.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.2.0" />
-    <PackageReference Include="Pentagon.Extensions.Logging" Version="1.0.2" />
+    <PackageReference Include="Pentagon.Utilities.Console" Version="1.1.0" />
+    <ProjectReference Include="..\Pentagon.Extensions.Startup\Pentagon.Extensions.Startup.csproj" />
   </ItemGroup>
 
 </Project>

@@ -8,6 +8,10 @@ namespace Pentagon.Extensions.Startup
 {
     public interface IApplicationEnvironment
     {
-        string Name { get; }
+        string EnvironmentName { get; }
+
+        string ApplicationName { get; }
+
+        string ContentRootPath {get;}
     }
 }

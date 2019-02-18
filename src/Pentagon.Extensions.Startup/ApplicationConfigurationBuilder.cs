@@ -10,16 +10,35 @@ namespace Pentagon.Extensions.Startup
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
     using Logging;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.FileProviders;
     using Microsoft.Extensions.Logging;
 
-    public class ApplicationConfigurationBuilder : IApplicationConfigurationBuilder
+    public class ApplicationBuilder : IApplicationBuilder
     {
-        string _defaultLoggerName;
+        string _defaultLoggerName = "Unspecified";
         bool _isLoggingAdded;
         public IList<(LogLevel Level, LoggerState State, Exception Exception)> BuildLog { get; } = new List<(LogLevel Level, LoggerState State, Exception Exception)>();
+
+        public ApplicationBuilder()
+        {
+            Configuration = new ConfigurationBuilder()
+                            .AddEnvironmentVariables()
+                                                      .SetBasePath(Directory.GetCurrentDirectory())
+                    .Build();
+
+            var ass = Assembly.GetEntryAssembly().GetName().Name;
+
+            Environment = new ApplicationEnvironment
+            {
+                EnvironmentName = ApplicationEnvironmentNames.Production,
+                ApplicationName = ass,
+                ContentRootPath = Directory.GetCurrentDirectory()
+            };
+        }
 
         /// <inheritdoc />
         public IServiceCollection Services { get; } = new ServiceCollection();
@@ -31,27 +50,73 @@ namespace Pentagon.Extensions.Startup
         public IConfiguration Configuration { get; private set; }
 
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder UseEnvironment(string environment)
+        public IApplicationBuilder AddEnvironment(string environment)
         {
-            Environment = new ApplicationEnvironment(environment);
+            var ass = Assembly.GetEntryAssembly().GetName().Name;
+
+            Environment = new ApplicationEnvironment
+            {
+                EnvironmentName = environment,
+                ApplicationName = ass,
+                ContentRootPath = Directory.GetCurrentDirectory()
+            };
 
             return this;
         }
         
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder AddConfiguration(Action<IConfigurationBuilder> configure = null)
+        public IApplicationBuilder AddJsonFileConfiguration(bool useEnvironmentSpecific = true,
+                                                                     string name = "appsettings",
+                                                                     IFileProvider fileProvider = null)
         {
+            AddConfiguration(builder =>
+                             {
+                                 if (fileProvider == null)
+                                     builder.AddJsonFile($"{name}.json", true, true);
+                                 else builder.AddJsonFile(fileProvider, $"{name}.json", true, true);
+
+                                 if (useEnvironmentSpecific)
+                                 {
+                                     if (fileProvider == null)
+                                         builder.AddJsonFile($"{name}.{Environment.EnvironmentName}.json", true, true);
+                                     else builder.AddJsonFile(fileProvider, $"{name}.{Environment.EnvironmentName}.json", true, true);
+                                 }
+                             });
+
+            return this;
+        }
+        
+        /// <inheritdoc />
+        public IApplicationBuilder AddCommandLineArguments(string[] args)
+        {
+            AddConfiguration(builder =>
+                             {
+                                 var coll = new Dictionary<string, string>();
+
+                                 for (var i = 0; i < args.Length; i++)
+                                 {
+                                     coll.Add($"CommandLineArguments:{i}", args[i]);
+                                 }
+
+                                 builder.AddInMemoryCollection(coll);
+                             });
+
+            return this;
+        }
+        
+        /// <inheritdoc />
+        public IApplicationBuilder AddConfiguration(Action<IConfigurationBuilder> configure)
+        {
+            if (configure == null)
+                return this;
+
+            // create builder
             var configurationBuilder = new ConfigurationBuilder()
-                                       .AddEnvironmentVariables()
-                                       .SetBasePath(Directory.GetCurrentDirectory())
-                                       .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true);
+                                       // adds current config
+                                       .AddConfiguration(Configuration);
 
-            if (Environment != null)
-                configurationBuilder.AddJsonFile($"appsettings.{Environment.Name}.json", true, true);
-            else
-                BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "Environment is not specified. Configuration of environment specific file(s) is skipped."), null));
-
-            configure?.Invoke(configurationBuilder);
+            // uses the new config
+            configure.Invoke(configurationBuilder);
 
             var configuration = configurationBuilder.Build();
 
@@ -61,54 +126,49 @@ namespace Pentagon.Extensions.Startup
         }
 
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder AddLogging() => AddLogging(defaultLoggerName: "Unspecified", configure: null);
+        public IApplicationBuilder AddLogging() => AddLogging(configure: null);
 
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder AddLogging(Action<ILoggingBuilder> configure) => AddLogging(defaultLoggerName: "Unspecified", configure: configure);
+        public IApplicationBuilder AddLogging(Action<ILoggingBuilder> configure)
+            => AddLogging(Configuration.GetSection("Logging"), configure);
 
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder AddLogging(string defaultLoggerName, Action<ILoggingBuilder> configure)
+        public IApplicationBuilder AddLogging(IConfiguration configuration)
+            => AddLogging(configuration, null);
+
+        /// <inheritdoc />
+        public IApplicationBuilder AddLogging(IConfiguration configuration, Action<ILoggingBuilder> configure)
         {
             Services.AddLogging(options =>
                                 {
-                                    if (Configuration != null)
-                                        options.AddConfiguration(Configuration.GetSection(key: "Logging"));
+                                    if (configuration != null)
+                                        options.AddConfiguration(configuration);
                                     else
-                                        BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "Configuration is not specified. Default logging option are used."), null));
-
-                                    options.AddConsole()
-                                           .AddDebug();
+                                        BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "Configuration is not specified. Default logging option will be used."), null));
 
                                     configure?.Invoke(options);
                                 });
-
-            _defaultLoggerName = defaultLoggerName;
 
             _isLoggingAdded = true;
             return this;
         }
 
         /// <inheritdoc />
-        public IApplicationConfigurationBuilder AddLogging(string defaultLoggerName) => AddLogging(defaultLoggerName, null);
-        
+        public IApplicationBuilder AddDefaultLogger(string name)
+        {
+            _defaultLoggerName = name;
+
+            return this;
+        }
+
         /// <inheritdoc />
         public ApplicationBuilderResult Build()
         {
-            if (Environment == null)
-            {
-                Environment = new ApplicationEnvironment("Unknown");
-                BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "Environment is not specified."), null));
-            }
-
             Services.AddSingleton(Environment);
+            Services.AddSingleton(Configuration);
 
-            if (Configuration != null)
-                Services.AddSingleton(Configuration);
-            else
-                BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "Configuration is not specified and won't be added to services."), null));
-
-            if (_defaultLoggerName != null && _isLoggingAdded)
-                Services.AddTransient(provider => provider.GetService<ILoggerFactory>().CreateLogger(_defaultLoggerName));
+            if (_isLoggingAdded)
+                Services.AddTransient(provider => provider.GetService<ILoggerFactory>().CreateLogger(Environment.ApplicationName ?? _defaultLoggerName));
 
             var result = new ApplicationBuilderResult(Services.BuildServiceProvider(), BuildLog);
 
