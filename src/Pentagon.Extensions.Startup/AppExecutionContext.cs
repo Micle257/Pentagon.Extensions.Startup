@@ -18,6 +18,8 @@ namespace Pentagon.Extensions.Startup
         public int Result { get; set; }
 
         public bool TerminationRequested { get; set; }
+
+        public int IterationCount { get; internal set; }
         
         internal static AppExecutionContext Create(IServiceScope scope) =>
                 new AppExecutionContext

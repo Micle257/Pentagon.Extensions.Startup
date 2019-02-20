@@ -89,6 +89,9 @@ namespace Pentagon.Extensions.Startup
         /// <inheritdoc />
         public IApplicationBuilder AddCommandLineArguments(string[] args)
         {
+            if (args == null || args.Length == 0)
+                return this;
+
             AddConfiguration(builder =>
                              {
                                  var coll = new Dictionary<string, string>();
