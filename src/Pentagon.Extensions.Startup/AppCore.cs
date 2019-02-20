@@ -8,6 +8,7 @@ namespace Pentagon.Extensions.Startup
 {
     using System;
     using System.Threading.Tasks;
+    using JetBrains.Annotations;
     using Logging;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ namespace Pentagon.Extensions.Startup
     /// <summary> Represents a helper base class for app configuration. Similar to ASP.NET Core 'Startup' class. </summary>
     public abstract class AppCore
     {
+        [NotNull]
         readonly object _lock = new object();
 
         IApplicationBuilder _builder;
@@ -27,9 +29,9 @@ namespace Pentagon.Extensions.Startup
         /// <value> The <see cref="IConfiguration" />. </value>
         public IConfiguration Configuration => _builder?.Configuration;
 
-        protected IApplicationEnvironment Environment => _builder?.Environment;
+        public IApplicationEnvironment Environment => _builder?.Environment;
 
-        protected IServiceProvider Services { get; private set; }
+        public IServiceProvider Services { get; private set; }
 
         /// <summary> Starts the startup procedure, configures the DI container. </summary>
         /// <param name="args"> The program arguments. </param>
@@ -44,12 +46,18 @@ namespace Pentagon.Extensions.Startup
                 {
                     _builder = new ApplicationBuilder();
 
-                    _builder.AddLogging()
+                    _builder.AddLogging()?
                             .AddCommandLineArguments(args);
 
                     BuildApp(_builder, args);
 
-                    var result = _builder.Build();
+                    if (_builder == null)
+                        throw new ArgumentNullException(nameof(_builder));
+                    
+                    var result = _builder?.Build();
+
+                    if (result == null)
+                        throw new ArgumentNullException(nameof(result));
 
                     Services = result.Provider;
 
@@ -62,6 +70,47 @@ namespace Pentagon.Extensions.Startup
                     _startupCalled = true;
                 }
             }
+        }
+
+        public int Execute(AppExecutionType execution) => ExecuteAsync(execution).Result;
+
+        public async Task<int> ExecuteAsync(AppExecutionType execution)
+        {
+            if (execution == AppExecutionType.Unspecified)
+                throw new ArgumentException(message: "App execution was not specified.");
+
+            if (execution == AppExecutionType.LoopRun)
+            {
+                do
+                {
+                    using (var scope = Services.CreateScope())
+                    {
+                        var result = await ExecuteScopedCoreAsync(AppExecutionContext.Create(scope));
+
+                        if (result.TerminationRequested)
+                            return result.Result;
+                    }
+                } while (true);
+            }
+
+            if (execution == AppExecutionType.SingleRun)
+            {
+                var result = await ExecuteCoreAsync(Services);
+
+                return result;
+            }
+
+            return 0;
+        }
+
+        protected virtual Task<int> ExecuteCoreAsync(IServiceProvider provider) => Task.FromResult(0);
+
+        protected virtual Task<AppExecutionContext> ExecuteScopedCoreAsync(AppExecutionContext context)
+        {
+            context.TerminationRequested = true;
+            context.Result = 0;
+
+            return Task.FromResult(context);
         }
 
         /// <summary> Builds the application. </summary>
