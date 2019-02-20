@@ -22,7 +22,7 @@ namespace Pentagon.Extensions.Startup
 
         IApplicationBuilder _builder;
 
-        /// <summary> The value indicates if the <see cref="OnStartup" /> methods was called. </summary>
+        /// <summary> The value indicates if the <see cref="ConfigureServices" /> methods was called. </summary>
         bool _startupCalled;
 
         /// <summary> Gets the configuration instance. </summary>
@@ -35,7 +35,7 @@ namespace Pentagon.Extensions.Startup
 
         /// <summary> Starts the startup procedure, configures the DI container. </summary>
         /// <param name="args"> The program arguments. </param>
-        public void OnStartup(string[] args)
+        public void ConfigureServices(string[] args = null)
         {
             lock (_lock)
             {
@@ -72,23 +72,52 @@ namespace Pentagon.Extensions.Startup
             }
         }
 
-        public int Execute(AppExecutionType execution) => ExecuteAsync(execution).Result;
+        public int Execute(AppExecutionType execution, ExecutionOptions options = null) => ExecuteAsync(execution, options).Result;
 
-        public async Task<int> ExecuteAsync(AppExecutionType execution)
+        public async Task<int> ExecuteAsync(AppExecutionType execution, ExecutionOptions options = null)
         {
+            if (!_startupCalled)
+                throw new InvalidOperationException("Startup hasn't been called yet.");
+
             if (execution == AppExecutionType.Unspecified)
                 throw new ArgumentException(message: "App execution was not specified.");
 
+            if (options == null)
+                options = new ExecutionOptions();
+
             if (execution == AppExecutionType.LoopRun)
             {
+                var currentIteration = 0;
+
                 do
                 {
                     using (var scope = Services.CreateScope())
                     {
-                        var result = await ExecuteScopedCoreAsync(AppExecutionContext.Create(scope));
+                        var context = AppExecutionContext.Create(scope);
 
-                        if (result.TerminationRequested)
-                            return result.Result;
+                        context.IterationCount = currentIteration;
+
+                        try
+                        {
+                            await ExecuteScopedCoreAsync(context);
+                        }
+                        catch
+                        {
+                            throw;
+                        }
+
+                        if (options.TerminateValue.HasValue && options.TerminateValue.Value == context.Result)
+                        {
+                            context.TerminationRequested = true;
+                        }
+
+                        if (context.TerminationRequested)
+                            return context.Result;
+
+                        if (options.LoopWaitMilliseconds > 0)
+                            await Task.Delay(options.LoopWaitMilliseconds);
+
+                        currentIteration++;
                     }
                 } while (true);
             }
@@ -105,7 +134,7 @@ namespace Pentagon.Extensions.Startup
 
         protected virtual Task<int> ExecuteCoreAsync(IServiceProvider provider) => Task.FromResult(0);
 
-        protected virtual Task<AppExecutionContext> ExecuteScopedCoreAsync(AppExecutionContext context)
+        protected virtual Task ExecuteScopedCoreAsync(AppExecutionContext context)
         {
             context.TerminationRequested = true;
             context.Result = 0;
