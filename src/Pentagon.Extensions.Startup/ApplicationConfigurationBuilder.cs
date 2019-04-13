@@ -29,15 +29,6 @@ namespace Pentagon.Extensions.Startup
                             .AddEnvironmentVariables()
                                                       .SetBasePath(Directory.GetCurrentDirectory())
                     .Build();
-
-            var ass = Assembly.GetEntryAssembly().GetName().Name;
-
-            Environment = new ApplicationEnvironment
-            {
-                EnvironmentName = ApplicationEnvironmentNames.Production,
-                ApplicationName = ass,
-                ContentRootPath = Directory.GetCurrentDirectory()
-            };
         }
 
         /// <inheritdoc />
@@ -63,7 +54,26 @@ namespace Pentagon.Extensions.Startup
 
             return this;
         }
-        
+
+        public IApplicationBuilder AddEnvironmentFromEnvironmentVariable(string variableName = "ASPNETCORE_ENVIRONMENT")
+        {
+            var ass = Assembly.GetEntryAssembly().GetName().Name;
+
+            var env = System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+            if (env == null || !ApplicationEnvironmentExtensions.IsValidName(env))
+                env = ApplicationEnvironmentNames.Production;
+
+            Environment = new ApplicationEnvironment
+                          {
+                                  EnvironmentName = env,
+                                  ApplicationName = ass,
+                                  ContentRootPath = Directory.GetCurrentDirectory()
+                          };
+
+            return this;
+        }
+
         /// <inheritdoc />
         public IApplicationBuilder AddJsonFileConfiguration(bool useEnvironmentSpecific = true,
                                                                      string name = "appsettings",
@@ -167,6 +177,11 @@ namespace Pentagon.Extensions.Startup
         /// <inheritdoc />
         public ApplicationBuilderResult Build()
         {
+            if (Environment == null)
+            {
+                AddEnvironmentFromEnvironmentVariable();
+            }
+
             Services.AddSingleton(Environment);
             Services.AddSingleton(Configuration);
 

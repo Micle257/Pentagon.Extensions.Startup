@@ -23,6 +23,8 @@ namespace Pentagon.Extensions.Startup
 
         IApplicationBuilder AddEnvironment(string environment);
 
+        IApplicationBuilder AddEnvironmentFromEnvironmentVariable(string variableName = "ASPNETCORE_ENVIRONMENT");
+
         IApplicationBuilder AddCommandLineArguments(string[] args);
 
         IApplicationBuilder AddJsonFileConfiguration(bool useEnvironmentSpecific = true,
