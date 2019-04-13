@@ -14,9 +14,17 @@ namespace Pentagon.Extensions.Startup.Cli
 
     public abstract class AppConsoleCore : AppCore
     {
+        /// <summary>
+        /// Gets the fail callback. Default callback is no action.
+        /// </summary>
+        /// <value>
+        /// The <see cref="Func{TResult}"/> with return value of <see cref="Task"/>.
+        /// </value>
+        public virtual Func<Task> FailCallback { get; protected set; } = () => Task.CompletedTask;
+
         public virtual void OnExit(bool success)
         {
-            if (Environment.EnvironmentName == ApplicationEnvironmentNames.Development)
+            if (Environment.IsDevelopment())
             {
                 Console.WriteLine();
                 if (!success)
@@ -28,26 +36,26 @@ namespace Pentagon.Extensions.Startup.Cli
                 Console.WriteLine(value: " Press any key to exit the application...");
                 Console.ReadKey();
             }
-            else if (Environment.EnvironmentName == ApplicationEnvironmentNames.Production && !success)
+            else if (!Environment.IsDevelopment() && !success)
             {
                 ConsoleHelper.WriteError(errorValue: "Program execution failed.");
                 Console.WriteLine();
             }
         }
 
-        public async Task RunCommand<TCommand, TOptions>(TOptions options, Action failCallback)
+        public async Task RunCommand<TCommand, TOptions>(TOptions options, Func<Task> failCallback)
                 where TCommand : ICliCommand<TOptions>
         {
             try
             {
                 var command = Services.GetService<TCommand>();
 
-                await command.RunAsync(options);
+                await command.RunAsync(options).ConfigureAwait(false);
             }
             catch (Exception e)
             {
                 Services.GetService<ILogger>()?.LogCritical(e, message: "Error while running play command.");
-                failCallback();
+                await (failCallback?.Invoke()).ConfigureAwait(false);
                 throw;
             }
         }
