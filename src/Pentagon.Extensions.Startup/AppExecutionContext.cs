@@ -15,17 +15,21 @@ namespace Pentagon.Extensions.Startup
 
         public IServiceProvider Provider { get; private set; }
 
+        public AppExecutionType ExecutionType { get; private set; }
+
         public int Result { get; set; }
 
         public bool TerminationRequested { get; set; }
 
         public int IterationCount { get; internal set; }
         
-        internal static AppExecutionContext Create(IServiceScope scope) =>
+        internal static AppExecutionContext Create(IServiceScope scope, AppExecutionType execution) =>
                 new AppExecutionContext
                 {
                         Scope = scope,
-                        Provider = scope.ServiceProvider
+                        Provider = scope.ServiceProvider,
+                        ExecutionType = execution
                 };
+
     }
 }

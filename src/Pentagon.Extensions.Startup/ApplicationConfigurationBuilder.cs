@@ -55,13 +55,13 @@ namespace Pentagon.Extensions.Startup
             return this;
         }
 
-        public IApplicationBuilder AddEnvironmentFromEnvironmentVariable()
+        public IApplicationBuilder AddEnvironmentFromEnvironmentVariable(string variableName = "ASPNETCORE_ENVIRONMENT")
         {
             var ass = Assembly.GetEntryAssembly().GetName().Name;
 
             var env = System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
-            if (!ApplicationEnvironmentExtensions.IsValidName(env))
+            if (env == null || !ApplicationEnvironmentExtensions.IsValidName(env))
                 env = ApplicationEnvironmentNames.Production;
 
             Environment = new ApplicationEnvironment

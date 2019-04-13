@@ -53,7 +53,7 @@ namespace Pentagon.Extensions.Startup
 
                     if (_builder == null)
                         throw new ArgumentNullException(nameof(_builder));
-                    
+
                     var result = _builder?.Build();
 
                     if (result == null)
@@ -85,62 +85,47 @@ namespace Pentagon.Extensions.Startup
             if (options == null)
                 options = new ExecutionOptions();
 
-            if (execution == AppExecutionType.LoopRun)
-            {
-                var currentIteration = 0;
+            var currentIteration = 0;
 
-                do
+            do
+            {
+                using (var scope = Services.CreateScope())
                 {
-                    using (var scope = Services.CreateScope())
+                    var context = AppExecutionContext.Create(scope, execution);
+
+                    context.IterationCount = currentIteration;
+
+                    try
                     {
-                        var context = AppExecutionContext.Create(scope);
-
-                        context.IterationCount = currentIteration;
-
-                        try
-                        {
-                            await ExecuteScopedCoreAsync(context);
-                        }
-                        catch
-                        {
-                            throw;
-                        }
-
-                        if (options.TerminateValue.HasValue && options.TerminateValue.Value == context.Result)
-                        {
-                            context.TerminationRequested = true;
-                        }
-
-                        if (context.TerminationRequested)
-                            return context.Result;
-
-                        if (options.LoopWaitMilliseconds > 0)
-                            await Task.Delay(options.LoopWaitMilliseconds);
-
-                        currentIteration++;
+                        await ExecuteCoreAsync(context).ConfigureAwait(false);
                     }
-                } while (true);
-            }
+                    catch
+                    {
+                        throw;
+                    }
 
-            if (execution == AppExecutionType.SingleRun)
-            {
-                var result = await ExecuteCoreAsync(Services);
+                    if (execution == AppExecutionType.SingleRun)
+                        return context.Result;
 
-                return result;
-            }
+                    if (options.TerminateValue.HasValue && options.TerminateValue.Value == context.Result)
+                    {
+                        context.TerminationRequested = true;
+                    }
+
+                    if (context.TerminationRequested)
+                        return context.Result;
+
+                    if (options.LoopWaitMilliseconds > 0)
+                        await Task.Delay(options.LoopWaitMilliseconds);
+
+                    currentIteration++;
+                }
+            } while (true);
 
             return 0;
         }
 
-        protected virtual Task<int> ExecuteCoreAsync(IServiceProvider provider) => Task.FromResult(0);
-
-        protected virtual Task ExecuteScopedCoreAsync(AppExecutionContext context)
-        {
-            context.TerminationRequested = true;
-            context.Result = 0;
-
-            return Task.FromResult(context);
-        }
+        protected virtual Task ExecuteCoreAsync(AppExecutionContext context) => Task.CompletedTask;
 
         /// <summary> Builds the application. </summary>
         /// <param name="appBuilder"> The application builder. </param>

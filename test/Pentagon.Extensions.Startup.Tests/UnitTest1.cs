@@ -15,7 +15,7 @@ namespace Pentagon.Extensions.Startup.Tests
         }
 
         /// <inheritdoc />
-        protected override Task ExecuteScopedCoreAsync(AppExecutionContext context)
+        protected override Task ExecuteCoreAsync(AppExecutionContext context)
         {
             Console.WriteLine(context.IterationCount);
 
