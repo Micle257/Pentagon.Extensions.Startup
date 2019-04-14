@@ -47,6 +47,20 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
         public string Text { get; set; }
     }
 
+    [Verb("op")]
+    class OpOptions
+    {
+        [Value(0)]
+        public string Text { get; set; }
+    }
+
+    [Verb("op2")]
+    class Op2Options
+    {
+        [Value(0)]
+        public string Text { get; set; }
+    }
+
     class FirstCommand : ICliCommand<FirstOptions>
     {
         /// <inheritdoc />
