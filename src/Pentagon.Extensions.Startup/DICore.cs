@@ -1,25 +1,38 @@
 ﻿namespace Pentagon.Extensions.Startup {
     using System;
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
     public static class DICore
     {
-        public static ILogger Logger => (ILogger)App.Services.GetService(typeof(ILogger));
+        public static ILogger Logger => Get<ILogger>();
 
-        public static IConfiguration Configuration => App.Configuration;
+        public static IConfiguration Configuration => Get<IConfiguration>();
+
+        public static IApplicationEnvironment Environment => Get<IApplicationEnvironment>();
 
         public static AppCore App { get; set; }
 
         public static TService Get<TService>()
         {
+            if (App == null)
+            {
+                throw new ArgumentNullException($"{nameof(DICore)}.{nameof(App)}", $"The App property must be set in order to use {nameof(DICore)} class.");
+            }
+
+            if (App.Services == null)
+            {
+                throw new ArgumentNullException($"{nameof(DICore)}.{nameof(App)}.{nameof(App.Services)}", $"The App is not properly built: cannot resolve services in {nameof(DICore)} class.");
+            }
+
             try
             {
-                return (TService)App.Services.GetService(typeof(TService));
+                return (TService)App.Services.GetRequiredService(typeof(TService));
             }
-            catch (Exception e)
+            catch (InvalidOperationException e)
             {
-                Logger?.LogCritical(e, $"The type {typeof(TService).Name} cannot be resolved via IoC.");
+                Logger?.LogError(e, $"The type {typeof(TService).Name} cannot be resolved via IoC.");
                 throw;
             }
         }

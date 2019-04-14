@@ -19,17 +19,18 @@ namespace Pentagon.Extensions.Startup
 
     public class ApplicationBuilder : IApplicationBuilder
     {
-        string _defaultLoggerName = "Unspecified";
+        string _defaultLoggerName = "Default";
         bool _isLoggingAdded;
-        public IList<(LogLevel Level, LoggerState State, Exception Exception)> BuildLog { get; } = new List<(LogLevel Level, LoggerState State, Exception Exception)>();
 
         public ApplicationBuilder()
         {
             Configuration = new ConfigurationBuilder()
                             .AddEnvironmentVariables()
-                                                      .SetBasePath(Directory.GetCurrentDirectory())
-                    .Build();
+                            .SetBasePath(Directory.GetCurrentDirectory())
+                            .Build();
         }
+
+        public IList<(LogLevel Level, LoggerState State, Exception Exception)> BuildLog { get; } = new List<(LogLevel Level, LoggerState State, Exception Exception)>();
 
         /// <inheritdoc />
         public IServiceCollection Services { get; } = new ServiceCollection();
@@ -46,11 +47,11 @@ namespace Pentagon.Extensions.Startup
             var ass = Assembly.GetEntryAssembly().GetName().Name;
 
             Environment = new ApplicationEnvironment
-            {
-                EnvironmentName = environment,
-                ApplicationName = ass,
-                ContentRootPath = Directory.GetCurrentDirectory()
-            };
+                          {
+                                  EnvironmentName = environment,
+                                  ApplicationName = ass,
+                                  ContentRootPath = Directory.GetCurrentDirectory()
+                          };
 
             return this;
         }
@@ -59,7 +60,7 @@ namespace Pentagon.Extensions.Startup
         {
             var ass = Assembly.GetEntryAssembly().GetName().Name;
 
-            var env = System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var env = System.Environment.GetEnvironmentVariable(variable: "ASPNETCORE_ENVIRONMENT");
 
             if (env == null || !ApplicationEnvironmentExtensions.IsValidName(env))
                 env = ApplicationEnvironmentNames.Production;
@@ -76,26 +77,28 @@ namespace Pentagon.Extensions.Startup
 
         /// <inheritdoc />
         public IApplicationBuilder AddJsonFileConfiguration(bool useEnvironmentSpecific = true,
-                                                                     string name = "appsettings",
-                                                                     IFileProvider fileProvider = null)
+                                                            string name = "appsettings",
+                                                            IFileProvider fileProvider = null)
         {
             AddConfiguration(builder =>
                              {
                                  if (fileProvider == null)
                                      builder.AddJsonFile($"{name}.json", true, true);
-                                 else builder.AddJsonFile(fileProvider, $"{name}.json", true, true);
+                                 else
+                                     builder.AddJsonFile(fileProvider, $"{name}.json", true, true);
 
                                  if (useEnvironmentSpecific)
                                  {
                                      if (fileProvider == null)
                                          builder.AddJsonFile($"{name}.{Environment.EnvironmentName}.json", true, true);
-                                     else builder.AddJsonFile(fileProvider, $"{name}.{Environment.EnvironmentName}.json", true, true);
+                                     else
+                                         builder.AddJsonFile(fileProvider, $"{name}.{Environment.EnvironmentName}.json", true, true);
                                  }
                              });
 
             return this;
         }
-        
+
         /// <inheritdoc />
         public IApplicationBuilder AddCommandLineArguments(string[] args)
         {
@@ -107,16 +110,14 @@ namespace Pentagon.Extensions.Startup
                                  var coll = new Dictionary<string, string>();
 
                                  for (var i = 0; i < args.Length; i++)
-                                 {
                                      coll.Add($"CommandLineArguments:{i}", args[i]);
-                                 }
 
                                  builder.AddInMemoryCollection(coll);
                              });
 
             return this;
         }
-        
+
         /// <inheritdoc />
         public IApplicationBuilder AddConfiguration(Action<IConfigurationBuilder> configure)
         {
@@ -125,8 +126,8 @@ namespace Pentagon.Extensions.Startup
 
             // create builder
             var configurationBuilder = new ConfigurationBuilder()
-                                       // adds current config
-                                       .AddConfiguration(Configuration);
+                    // adds current config
+                    .AddConfiguration(Configuration);
 
             // uses the new config
             configure.Invoke(configurationBuilder);
@@ -143,7 +144,7 @@ namespace Pentagon.Extensions.Startup
 
         /// <inheritdoc />
         public IApplicationBuilder AddLogging(Action<ILoggingBuilder> configure)
-            => AddLogging(Configuration.GetSection("Logging"), configure);
+            => AddLogging(Configuration.GetSection(key: "Logging"), configure);
 
         /// <inheritdoc />
         public IApplicationBuilder AddLogging(IConfiguration configuration)
@@ -178,9 +179,7 @@ namespace Pentagon.Extensions.Startup
         public ApplicationBuilderResult Build()
         {
             if (Environment == null)
-            {
                 AddEnvironmentFromEnvironmentVariable();
-            }
 
             Services.AddSingleton(Environment);
             Services.AddSingleton(Configuration);
