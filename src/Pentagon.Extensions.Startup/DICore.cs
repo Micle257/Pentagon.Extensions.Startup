@@ -16,6 +16,11 @@
 
         public static TService Get<TService>()
         {
+            return (TService) Get(typeof(TService));
+        }
+
+        public static object Get(Type serviceType)
+        {
             if (App == null)
             {
                 throw new ArgumentNullException($"{nameof(DICore)}.{nameof(App)}", $"The App property must be set in order to use {nameof(DICore)} class.");
@@ -28,11 +33,11 @@
 
             try
             {
-                return (TService)App.Services.GetRequiredService(typeof(TService));
+                return App.Services.GetRequiredService(serviceType);
             }
             catch (InvalidOperationException e)
             {
-                Logger?.LogError(e, $"The type {typeof(TService).Name} cannot be resolved via IoC.");
+                Logger?.LogError(e, $"The type {serviceType.Name} cannot be resolved via IoC.");
                 throw;
             }
         }

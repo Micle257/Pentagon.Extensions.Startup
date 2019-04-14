@@ -149,5 +149,16 @@ namespace Pentagon.Extensions.Startup
                                                          Services.GetService<ILogger>()?.LogSource(LogLevel.Error, message: "Exception unhandled (TaskScheduler).", new EventId(), args.Exception);
                                                      };
         }
+
+        [NotNull]
+        public static T New<T>([NotNull] T app, string[] args)
+            where T : AppCore
+        {
+            DICore.App = app ?? throw new ArgumentNullException(nameof(app));
+
+            app.ConfigureServices(args);
+
+            return app;
+        }
     }
 }
