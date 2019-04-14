@@ -91,7 +91,9 @@ namespace Pentagon.Extensions.Startup
             {
                 using (var scope = Services.CreateScope())
                 {
-                    var context = AppExecutionContext.Create(scope, execution);
+                    var context = AppExecutionContext.Create(execution == AppExecutionType.LoopRun ? scope.ServiceProvider : Services,
+                                                             execution == AppExecutionType.LoopRun ? scope : null,
+                                                             execution);
 
                     context.IterationCount = currentIteration;
 

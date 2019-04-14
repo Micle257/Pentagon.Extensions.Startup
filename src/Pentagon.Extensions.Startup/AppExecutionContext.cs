@@ -23,11 +23,11 @@ namespace Pentagon.Extensions.Startup
 
         public int IterationCount { get; internal set; }
         
-        internal static AppExecutionContext Create(IServiceScope scope, AppExecutionType execution) =>
+        internal static AppExecutionContext Create(IServiceProvider serviceProvider,IServiceScope scope, AppExecutionType execution) =>
                 new AppExecutionContext
                 {
                         Scope = scope,
-                        Provider = scope.ServiceProvider,
+                        Provider = serviceProvider,
                         ExecutionType = execution
                 };
 
