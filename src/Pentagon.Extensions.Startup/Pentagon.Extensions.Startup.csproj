@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Michal Pokorný</Authors>
@@ -14,16 +13,13 @@
     <LangVersion>7.3</LangVersion>
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
-  
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\..\build\$(AssemblyName)\</OutputPath>
     <DocumentationFile>..\..\build\$(AssemblyName)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\debug\$(AssemblyName)\</OutputPath>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2019.1.1" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
@@ -34,7 +30,17 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.2.0" />
-    <PackageReference Include="Pentagon.Extensions.Logging" Version="1.1.1" />
   </ItemGroup>
-
+  <Choose>
+    <When Condition="'$(SolutionPath)'=='C:\Users\Michal\Source\Pentagon.All.sln' AND '$(Configuration)'=='Debug'">
+      <ItemGroup>
+        <ProjectReference Include="..\..\..\Pentagon.Extensions.Logging\src\Pentagon.Extensions.Logging\Pentagon.Extensions.Logging.csproj" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="Pentagon.Extensions.Logging" Version="1.1.1" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 </Project>
