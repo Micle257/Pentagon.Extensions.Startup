@@ -13,10 +13,10 @@ namespace Pentagon.Extensions.Startup.Cli
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using CommandLine;
+    using Console;
     using JetBrains.Annotations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Utilities.Console.Helpers;
 
     public abstract class AppConsoleCore : AppCore
     {
