@@ -195,7 +195,7 @@ namespace Pentagon.Extensions.Startup
         /// <inheritdoc />
         public IEnumerable<(string Text, LogLevel Level)> GetLoggerLines()
         {
-            return BuildLog.Select(a => (LoggerSourceFormatter.GetLogMessage(a.State, a.Exception), a.Level));
+            return BuildLog.Select(a => (LoggerSourceFormatter.GetLogMessage(a.State, null, a.Exception), a.Level));
         }
     }
 }
