@@ -30,7 +30,7 @@ namespace Pentagon.Extensions.Startup.Cli
         /// <returns></returns>
         protected virtual async Task OnExecuteAsync()
         {
-            if (DICore.App is AppConsoleCore app)
+            if (DICore.App is CliApp app)
                 await app.RunCommand<TCommand, TOptions>(Options, app.FailCallback).ConfigureAwait(false);
         }
     }

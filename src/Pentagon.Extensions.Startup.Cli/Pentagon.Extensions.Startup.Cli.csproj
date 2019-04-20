@@ -8,7 +8,7 @@
     <Copyright>Copyright (c) Michal Pokorný. All Rights Reserved.</Copyright>
     <PackageTags>net netstandard</PackageTags>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.5.0</Version>
+    <Version>1.5.1</Version>
     <LangVersion>7.3</LangVersion>
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
@@ -36,7 +36,7 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <PackageReference Include="Pentagon.Extensions.Console" Version="1.2.0" />
+        <PackageReference Include="Pentagon.Extensions.Console" Version="1.5.0" />
       </ItemGroup>
     </Otherwise>
   </Choose>
@@ -49,7 +49,7 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <PackageReference Include="Pentagon.Extensions.Startup" Version="1.0.2" />
+        <PackageReference Include="Pentagon.Extensions.Startup" Version="1.5.0" />
       </ItemGroup>
     </Otherwise>
   </Choose>

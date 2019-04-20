@@ -18,7 +18,7 @@ namespace Pentagon.Extensions.Startup.Cli
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
-    public abstract class AppConsoleCore : AppCore
+    public class CliApp : AppCore
     {
         /// <summary>
         /// Gets the fail callback. Default callback is no action.
@@ -27,6 +27,12 @@ namespace Pentagon.Extensions.Startup.Cli
         /// The <see cref="Func{TResult}"/> with return value of <see cref="Task"/>.
         /// </value>
         public virtual Func<Task> FailCallback { get; protected set; } = () => Task.CompletedTask;
+
+        /// <inheritdoc />
+        protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
+        {
+            appBuilder.AddCliCommands();
+        }
 
         public virtual void OnExit(bool success)
         {
@@ -133,6 +139,13 @@ namespace Pentagon.Extensions.Startup.Cli
                 await (failCallback?.Invoke()).ConfigureAwait(false);
                 throw;
             }
+        }
+
+        public static Task RunAsync(string[] args)
+        {
+            var app = new CliApp();
+            app.ConfigureServices(args);
+            return app.ExecuteCliAsync(args);
         }
     }
 }
