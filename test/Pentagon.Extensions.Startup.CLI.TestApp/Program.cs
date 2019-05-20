@@ -5,12 +5,14 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
     using System.Threading.Tasks;
     using Cli;
     using CommandLine;
     using Microsoft.Extensions.DependencyInjection;
+    using Console = System.Console;
 
-    class App : AppConsoleCore
+    class App : CliApp
     {
         /// <inheritdoc />
         protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
@@ -64,7 +66,7 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
     class FirstCommand : ICliCommand<FirstOptions>
     {
         /// <inheritdoc />
-        public Task<int> RunAsync(FirstOptions options)
+        public Task<int> RunAsync(FirstOptions options, CancellationToken cancellationToken = default)
         {
             Console.WriteLine("First");
             Console.WriteLine(options.Text);
