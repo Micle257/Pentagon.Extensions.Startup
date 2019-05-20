@@ -11,6 +11,7 @@ namespace Pentagon.Extensions.Startup.Cli
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
+    using System.Threading;
     using System.Threading.Tasks;
     using CommandLine;
     using Console;
@@ -18,7 +19,7 @@ namespace Pentagon.Extensions.Startup.Cli
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
-    public abstract class AppConsoleCore : AppCore
+    public class CliApp : AppCore
     {
         /// <summary>
         /// Gets the fail callback. Default callback is no action.
@@ -26,7 +27,17 @@ namespace Pentagon.Extensions.Startup.Cli
         /// <value>
         /// The <see cref="Func{TResult}"/> with return value of <see cref="Task"/>.
         /// </value>
-        public virtual Func<Task> FailCallback { get; protected set; } = () => Task.CompletedTask;
+        public virtual Func<IEnumerable<Error>, Task<int>> FailCallback { get; protected set; } = errors =>
+                                                                                                  {
+                                                                                                      ConsoleHelper.WriteError(errorValue: $"CLI parsing failed:{errors?.Aggregate(string.Empty, (a, b) => $" {a}\n {b}") ?? "\n Unknown reason"}");
+                                                                                                      return Task.FromResult(-1);
+                                                                                                  };
+
+        /// <inheritdoc />
+        protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
+        {
+            appBuilder.AddCliCommands();
+        }
 
         public virtual void OnExit(bool success)
         {
@@ -50,20 +61,11 @@ namespace Pentagon.Extensions.Startup.Cli
             }
         }
 
-        public Task<int> ExecuteCliAsync(IEnumerable<string> args, Func<IEnumerable<Error>, Task<int>> errorCallback = null)
+        public Task<int> ExecuteCliAsync(IEnumerable<string> args, CancellationToken cancellationToken = default)
         {
             if (Services == null)
             {
                 throw new ArgumentNullException($"{nameof(Services)}", $"The App is not properly built: cannot execute app.");
-            }
-
-            if (errorCallback == null)
-            {
-                errorCallback = errors =>
-                                {
-                                    ConsoleHelper.WriteError(errorValue: $"CLI parsing failed:{errors?.Aggregate(string.Empty, (a, b) => $" {a}\n {b}") ?? "\n Unknown reason"}");
-                                    return Task.FromResult(-1);
-                                };
             }
 
             var types = AppDomain.CurrentDomain
@@ -80,12 +82,12 @@ namespace Pentagon.Extensions.Startup.Cli
 
             var parserResult = Parser.Default.ParseArguments(args, types);
 
-            var result = parserResult.MapResult(RunCommandByReflection, errorCallback);
+            var result = parserResult.MapResult(o => RunCommandByReflection(o, cancellationToken), FailCallback);
 
             return result;
         }
 
-        Task<int> RunCommandByReflection(object options)
+        Task<int> RunCommandByReflection(object options, CancellationToken cancellationToken = default)
         {
             var optionsType = options.GetType().GetTypeInfo();
 
@@ -113,7 +115,7 @@ namespace Pentagon.Extensions.Startup.Cli
 
             var runMethod = command.GetType().GetMethod(nameof(ICliCommand<object>.RunAsync));
 
-            var methodReturnValue = (Task<int>)runMethod.Invoke(command, new[] { options });
+            var methodReturnValue = (Task<int>)runMethod.Invoke(command, new[] { options, cancellationToken });
 
             return methodReturnValue;
         }
@@ -133,6 +135,13 @@ namespace Pentagon.Extensions.Startup.Cli
                 await (failCallback?.Invoke()).ConfigureAwait(false);
                 throw;
             }
+        }
+
+        public static Task RunAsync(string[] args)
+        {
+            var app = new CliApp();
+            app.ConfigureServices(args);
+            return app.ExecuteCliAsync(args);
         }
     }
 }

@@ -89,10 +89,18 @@ namespace Pentagon.Extensions.Startup
 
                                  if (useEnvironmentSpecific)
                                  {
-                                     if (fileProvider == null)
-                                         builder.AddJsonFile($"{name}.{Environment.EnvironmentName}.json", true, true);
+                                     if (Environment == null)
+                                     {
+                                         BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "The environment of app is null; environment specific configuration file cannot be used."),
+                                                          new ArgumentNullException(nameof(Environment), message: "The environment of app is null; environment specific configuration file cannot be used.")));
+                                     }
                                      else
-                                         builder.AddJsonFile(fileProvider, $"{name}.{Environment.EnvironmentName}.json", true, true);
+                                     {
+                                         if (fileProvider == null)
+                                             builder.AddJsonFile($"{name}.{Environment.EnvironmentName}.json", true, true);
+                                         else
+                                             builder.AddJsonFile(fileProvider, $"{name}.{Environment.EnvironmentName}.json", true, true);
+                                     }
                                  }
                              });
 

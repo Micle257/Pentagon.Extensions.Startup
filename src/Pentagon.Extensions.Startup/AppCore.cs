@@ -151,7 +151,7 @@ namespace Pentagon.Extensions.Startup
         }
 
         [NotNull]
-        public static T New<T>([NotNull] T app, string[] args)
+        public static T New<T>([NotNull] T app, string[] args = null)
             where T : AppCore
         {
             DICore.App = app ?? throw new ArgumentNullException(nameof(app));
