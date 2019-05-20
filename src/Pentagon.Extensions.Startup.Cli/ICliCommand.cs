@@ -6,12 +6,13 @@
 
 namespace Pentagon.Extensions.Startup.Cli
 {
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary> Represents a Command Line command. </summary>
     /// <typeparam name="TOptions"> The type of the options. </typeparam>
     public interface ICliCommand<in TOptions>
     {
-        Task<int> RunAsync(TOptions options);
+        Task<int> RunAsync(TOptions options, CancellationToken cancellationToken = default);
     }
 }
