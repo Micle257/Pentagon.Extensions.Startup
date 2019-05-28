@@ -11,8 +11,16 @@ namespace Pentagon.Extensions.Startup.Cli
 
     /// <summary> Represents a Command Line command. </summary>
     /// <typeparam name="TOptions"> The type of the options. </typeparam>
-    public interface ICliCommand<in TOptions>
+    public interface ICliHandler<in TOptions>
     {
         Task<int> RunAsync(TOptions options, CancellationToken cancellationToken = default);
+    }
+
+    public abstract class CliHandler<TOptions> : ICliHandler<TOptions>
+    {
+        public virtual void BuildApp(TOptions options) { }
+
+        /// <inheritdoc />
+        public abstract Task<int> RunAsync(TOptions options, CancellationToken cancellationToken = default);
     }
 }

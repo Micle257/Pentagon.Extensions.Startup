@@ -37,6 +37,8 @@ namespace Pentagon.Extensions.Startup.Cli
         protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
         {
             appBuilder.AddCliCommands();
+
+
         }
 
         public virtual void OnExit(bool success)
@@ -61,7 +63,7 @@ namespace Pentagon.Extensions.Startup.Cli
             }
         }
 
-        public Task<int> ExecuteCliAsync(IEnumerable<string> args, CancellationToken cancellationToken = default)
+        public Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
         {
             if (Services == null)
             {
@@ -82,28 +84,40 @@ namespace Pentagon.Extensions.Startup.Cli
 
             var parserResult = Parser.Default.ParseArguments(args, types);
 
+            ConfigureServices(args.ToArray());
+
             var result = parserResult.MapResult(o => RunCommandByReflection(o, cancellationToken), FailCallback);
 
             return result;
+        }
+
+        bool IsAbstractCliHandler(object options)
+        {
+            var optionsType = options.GetType().GetTypeInfo();
+
+            var commandType = typeof(ICliHandler<>).MakeGenericType(optionsType);
+
+            var command = Services?.GetService(commandType);
+
+            if (command == null)
+            {
+                ConsoleHelper.WriteError(errorValue: $"Cannot resolve command type from DI for options: {optionsType.Name}.");
+                return false;
+            }
+
+            if (command.GetType().BaseType == typeof(CliHandler<>).MakeGenericType(optionsType))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         Task<int> RunCommandByReflection(object options, CancellationToken cancellationToken = default)
         {
             var optionsType = options.GetType().GetTypeInfo();
 
-            //var commandTypes = Assembly.GetEntryAssembly()
-            //                           .DefinedTypes
-            //                           .Where(a => a.ImplementedInterfaces.Any(i => i == typeof(ICliCommand<>).MakeGenericType(optionsType)));
-            //
-            //var commandType = commandTypes.FirstOrDefault();
-            //
-            //if (commandType == null)
-            //{
-            //    ConsoleHelper.WriteError(errorValue: $"Cannot find command type for options: {optionsType.Name}.");
-            //    return Task.FromResult(-1);
-            //}
-
-            var commandType = typeof(ICliCommand<>).MakeGenericType(optionsType);
+            var commandType = typeof(ICliHandler<>).MakeGenericType(optionsType);
 
             var command = Services?.GetService(commandType);
 
@@ -113,7 +127,7 @@ namespace Pentagon.Extensions.Startup.Cli
                 return Task.FromResult(-1);
             }
 
-            var runMethod = command.GetType().GetMethod(nameof(ICliCommand<object>.RunAsync));
+            var runMethod = command.GetType().GetMethod(nameof(ICliHandler<object>.RunAsync));
 
             var methodReturnValue = (Task<int>)runMethod.Invoke(command, new[] { options, cancellationToken });
 
@@ -121,7 +135,7 @@ namespace Pentagon.Extensions.Startup.Cli
         }
 
         public async Task<int> RunCommand<TCommand, TOptions>(TOptions options, Func<Task> failCallback)
-                where TCommand : ICliCommand<TOptions>
+                where TCommand : ICliHandler<TOptions>
         {
             try
             {
@@ -140,7 +154,9 @@ namespace Pentagon.Extensions.Startup.Cli
         public static Task RunAsync(string[] args)
         {
             var app = new CliApp();
-            app.ConfigureServices(args);
+
+            //app.ConfigureServices(args);
+
             return app.ExecuteCliAsync(args);
         }
     }
