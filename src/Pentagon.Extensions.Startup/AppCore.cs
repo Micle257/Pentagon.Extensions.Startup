@@ -134,20 +134,23 @@ namespace Pentagon.Extensions.Startup
         /// <param name="args"> The program arguments. </param>
         protected abstract void BuildApp(IApplicationBuilder appBuilder, string[] args);
 
+        protected virtual void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
+        {
+            Services.GetService<ILogger>()?.LogSource(LogLevel.Error,
+                                                      message: "Exception unhandled (AppDomain).",
+                                                      new EventId(),
+                                                      args.ExceptionObject as Exception);
+        }
+
+        protected virtual void OnUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs args)
+        {
+            Services.GetService<ILogger>()?.LogSource(LogLevel.Error, message: "Exception unhandled (TaskScheduler).", new EventId(), args.Exception);
+        }
+
         void ConfigureUnhandledExceptionHandling()
         {
-            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
-                                                          {
-                                                              Services.GetService<ILogger>()?.LogSource(LogLevel.Error,
-                                                                                                        message: "Exception unhandled (AppDomain).",
-                                                                                                        new EventId(),
-                                                                                                        args.ExceptionObject as Exception);
-                                                          };
-
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
-                                                     {
-                                                         Services.GetService<ILogger>()?.LogSource(LogLevel.Error, message: "Exception unhandled (TaskScheduler).", new EventId(), args.Exception);
-                                                     };
+            AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
         }
 
         [NotNull]
