@@ -56,14 +56,18 @@ namespace Pentagon.Extensions.Startup
             return this;
         }
 
-        public IApplicationBuilder AddEnvironmentFromEnvironmentVariable(string variableName = "ASPNETCORE_ENVIRONMENT")
+        public IApplicationBuilder AddEnvironmentFromEnvironmentVariable(string variableName = null)
         {
-            var ass = Assembly.GetEntryAssembly().GetName().Name;
-
-            var env = System.Environment.GetEnvironmentVariable(variable: "ASPNETCORE_ENVIRONMENT");
+            var env = variableName != null
+                              ? System.Environment.GetEnvironmentVariable(variableName)
+                              : System.Environment.GetEnvironmentVariable(variable: "ASPNET_ENVIRONMENT")
+                                ?? System.Environment.GetEnvironmentVariable(variable: "ASPNETCORE_ENVIRONMENT")
+                                ?? Assembly.GetEntryAssembly()?.GetCustomAttribute<DefaultEnvironmentAttribute>()?.DefaultEnvironmentName;
 
             if (env == null || !ApplicationEnvironmentExtensions.IsValidName(env))
                 env = ApplicationEnvironmentNames.Production;
+
+            var ass = Assembly.GetEntryAssembly().GetName().Name;
 
             Environment = new ApplicationEnvironment
                           {
@@ -76,7 +80,7 @@ namespace Pentagon.Extensions.Startup
         }
 
         /// <inheritdoc />
-        public IApplicationBuilder AddJsonFileConfiguration(bool useEnvironmentSpecific = true,
+        public IApplicationBuilder AddJsonFileConfiguration(bool useEnvironmentSpecific = false,
                                                             string name = "appsettings",
                                                             IFileProvider fileProvider = null)
         {

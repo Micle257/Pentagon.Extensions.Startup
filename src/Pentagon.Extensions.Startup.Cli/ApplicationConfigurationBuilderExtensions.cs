@@ -18,16 +18,16 @@ namespace Pentagon.Extensions.Startup.Cli
             var commands = AppDomain.CurrentDomain
                                     .GetAssemblies()
                                     .SelectMany(a => a.GetTypes())
-                                    .Where(a => a.GetInterfaces().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(ICliCommand<>)));
+                                    .Where(a => a.GetInterfaces().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(ICliHandler<>)));
 
             foreach (var typeInfo in commands)
             {
                 var optionType = typeInfo.GetInterfaces()
-                                         .FirstOrDefault(a => a.GetGenericTypeDefinition() == typeof(ICliCommand<>))?
+                                         .FirstOrDefault(a => a.GetGenericTypeDefinition() == typeof(ICliHandler<>))?
                                          .GenericTypeArguments?
                                          .FirstOrDefault();
 
-                builder.Services.Add(new ServiceDescriptor(typeof(ICliCommand<>).MakeGenericType(optionType), typeInfo, serviceLifetime));
+                builder.Services.Add(new ServiceDescriptor(typeof(ICliHandler<>).MakeGenericType(optionType), typeInfo, serviceLifetime));
             }
 
             return builder;

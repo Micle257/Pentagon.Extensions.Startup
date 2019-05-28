@@ -63,7 +63,7 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
         public string Text { get; set; }
     }
 
-    class FirstCommand : ICliCommand<FirstOptions>
+    class FirstCommand : ICliHandler<FirstOptions>
     {
         /// <inheritdoc />
         public Task<int> RunAsync(FirstOptions options, CancellationToken cancellationToken = default)
