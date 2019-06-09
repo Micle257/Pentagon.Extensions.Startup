@@ -10,6 +10,7 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
     using Cli;
     using CommandLine;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Options;
     using Console = System.Console;
 
     class App : CliApp
@@ -17,61 +18,74 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
         /// <inheritdoc />
         protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
         {
-            appBuilder.AddCliCommands();
+            base.BuildApp(appBuilder, args);
+
+            appBuilder.AddJsonFileConfiguration(false);
+
+            appBuilder.Services
+                      .Configure<LolOptions>(Configuration.GetSection("O"))
+                      .Configure<LolOptions>("JSON", Configuration.GetSection("O")); ;
+
+            appBuilder.AddCliOptions<LolOptions>((original, cli) =>
+                                                 {
+                                                     if (cli.Lol != null)
+                                                         original.Lol = cli.Lol;
+                                                 });
         }
+    }
+
+    public class LolOptions
+    {
+        public string Lol { get; set; }
     }
 
     class Program
     {
+        public static App App { get; private set; }
+
         static async Task<int> Main(string[] args)
         {
-            var app = AppCore.New(new App(), args);
+            App = AppCore.New(new App(), args);
 
-            var res = await app.ExecuteCliAsync(args).ConfigureAwait(false);
+            var res = await App.ExecuteCliAsync(args).ConfigureAwait(false);
 
-            app.OnExit(res == 0);
+            App.OnExit(res == 0);
 
             return res;
         }
     }
 
     [Verb("first")]
-    class FirstOptions
+    public class FirstOptions
     {
         [Option('t')]
         public string Text { get; set; }
     }
 
-    [Verb("second")]
-    class SecondOptions
+   public class FirstCommand : CliHandler<FirstOptions>
     {
-        [Option('t')]
-        public string Text { get; set; }
-    }
+        readonly IOptionsMonitor<LolOptions> _optionsMonitor;
 
-    [Verb("op")]
-    class OpOptions
-    {
-        [Value(0)]
-        public string Text { get; set; }
-    }
-
-    [Verb("op2")]
-    class Op2Options
-    {
-        [Value(0)]
-        public string Text { get; set; }
-    }
-
-    class FirstCommand : ICliHandler<FirstOptions>
-    {
-        /// <inheritdoc />
-        public Task<int> RunAsync(FirstOptions options, CancellationToken cancellationToken = default)
+        public FirstCommand(IOptionsMonitor<LolOptions> optionsMonitor)
         {
-            Console.WriteLine("First");
-            Console.WriteLine(options.Text);
+            _optionsMonitor = optionsMonitor;
 
-            return Task.FromResult(50);
+            _optionsMonitor.OnChange((lolOptions, name) =>
+                                     {
+                                         Console.WriteLine($"Changed: '{name}' value: {lolOptions.Lol ?? "null"}");
+                                     });
+        }
+
+        /// <inheritdoc />
+        public override async Task<int> RunAsync(FirstOptions options, CancellationToken cancellationToken = default)
+        {
+            Program.App.UpdateOptions<LolOptions>(o => { o.Lol = "first"; });
+            Program.App.UpdateOptions<LolOptions>(o => { o.Lol = "second"; });
+            Program.App.UpdateOptions<LolOptions>(o => { o.Lol = null; });
+
+            await Task.Delay(Timeout.InfiniteTimeSpan);
+
+            return 1;
         }
     }
 }

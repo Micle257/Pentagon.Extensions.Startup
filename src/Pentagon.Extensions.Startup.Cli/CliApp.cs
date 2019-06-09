@@ -18,6 +18,7 @@ namespace Pentagon.Extensions.Startup.Cli
     using JetBrains.Annotations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     public class CliApp : AppCore
     {
@@ -37,8 +38,6 @@ namespace Pentagon.Extensions.Startup.Cli
         protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
         {
             appBuilder.AddCliCommands();
-
-
         }
 
         public virtual void OnExit(bool success)
@@ -63,6 +62,24 @@ namespace Pentagon.Extensions.Startup.Cli
             }
         }
 
+        public void UpdateOptions<TOptions>([CanBeNull] Action<TOptions> updateCallback)
+        {
+            UpdateOptions(Options.DefaultName, updateCallback);
+        }
+
+        public void UpdateOptions<TOptions>(string name, [CanBeNull] Action<TOptions> updateCallback)
+        {
+            var options = Services.GetServices<ICliOptionsSource<TOptions>>()
+                                  .FirstOrDefault(a => a.Name == name);
+
+            if (options == null)
+                return;
+
+            updateCallback?.Invoke(options.Options);
+
+            options.Reload();
+        }
+
         public Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
         {
             if (Services == null)
@@ -73,8 +90,8 @@ namespace Pentagon.Extensions.Startup.Cli
             var types = AppDomain.CurrentDomain
                                  .GetAssemblies()
                                  .SelectMany(a => a.GetTypes())
-                                .Where(a => a.GetCustomAttribute<VerbAttribute>() != null)
-                                .ToArray();
+                                 .Where(a => a.GetCustomAttribute<VerbAttribute>() != null)
+                                 .ToArray();
 
             if (types.Length == 0)
             {
@@ -154,8 +171,6 @@ namespace Pentagon.Extensions.Startup.Cli
         public static Task RunAsync(string[] args)
         {
             var app = new CliApp();
-
-            //app.ConfigureServices(args);
 
             return app.ExecuteCliAsync(args);
         }

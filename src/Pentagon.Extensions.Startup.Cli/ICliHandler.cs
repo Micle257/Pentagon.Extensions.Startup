@@ -15,12 +15,4 @@ namespace Pentagon.Extensions.Startup.Cli
     {
         Task<int> RunAsync(TOptions options, CancellationToken cancellationToken = default);
     }
-
-    public abstract class CliHandler<TOptions> : ICliHandler<TOptions>
-    {
-        public virtual void BuildApp(TOptions options) { }
-
-        /// <inheritdoc />
-        public abstract Task<int> RunAsync(TOptions options, CancellationToken cancellationToken = default);
-    }
 }
