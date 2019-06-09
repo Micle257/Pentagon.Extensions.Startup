@@ -33,6 +33,8 @@ namespace Pentagon.Extensions.Startup
 
         public IServiceProvider Services { get; private set; }
 
+        protected IServiceCollection ServiceData { get; private set; }
+
         /// <summary> Starts the startup procedure, configures the DI container. </summary>
         /// <param name="args"> The program arguments. </param>
         public void ConfigureServices(string[] args = null)
@@ -53,6 +55,8 @@ namespace Pentagon.Extensions.Startup
 
                     if (_builder == null)
                         throw new ArgumentNullException(nameof(_builder));
+
+                    ServiceData = _builder.Services;
 
                     var result = _builder?.Build();
 
@@ -128,6 +132,13 @@ namespace Pentagon.Extensions.Startup
         }
 
         protected virtual Task ExecuteCoreAsync(AppExecutionContext context) => Task.CompletedTask;
+
+        protected virtual void PostConfigureServices([CanBeNull] Action<IServiceCollection> configure)
+        {
+            configure?.Invoke(ServiceData);
+
+            Services = ServiceData.BuildServiceProvider();
+        }
 
         /// <summary> Builds the application. </summary>
         /// <param name="appBuilder"> The application builder. </param>
