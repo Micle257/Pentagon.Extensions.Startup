@@ -11,11 +11,15 @@ namespace Pentagon.Extensions.Startup
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
+    using JetBrains.Annotations;
     using Logging;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.FileProviders;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
+    using Microsoft.Extensions.Primitives;
 
     public class ApplicationBuilder : IApplicationBuilder
     {
@@ -42,6 +46,14 @@ namespace Pentagon.Extensions.Startup
         public IConfiguration Configuration { get; private set; }
 
         /// <inheritdoc />
+        public IApplicationBuilder DefineEnvironment(string environment)
+        {
+            ApplicationEnvironmentNames.Define(environment);
+
+            return this;
+        }
+
+        /// <inheritdoc />
         public IApplicationBuilder AddEnvironment(string environment)
         {
             var ass = Assembly.GetEntryAssembly().GetName().Name;
@@ -64,7 +76,7 @@ namespace Pentagon.Extensions.Startup
                                 ?? System.Environment.GetEnvironmentVariable(variable: "ASPNETCORE_ENVIRONMENT")
                                 ?? Assembly.GetEntryAssembly()?.GetCustomAttribute<DefaultEnvironmentAttribute>()?.DefaultEnvironmentName;
 
-            if (env == null || !ApplicationEnvironmentExtensions.IsValidName(env))
+            if (env == null || !ApplicationEnvironmentExtensions.IsValid(env))
                 env = ApplicationEnvironmentNames.Production;
 
             var ass = Assembly.GetEntryAssembly().GetName().Name;
@@ -112,7 +124,7 @@ namespace Pentagon.Extensions.Startup
         }
 
         /// <inheritdoc />
-        public IApplicationBuilder AddCommandLineArguments(string[] args)
+        public IApplicationBuilder AddCommandLineArguments([CanBeNull] string[] args, string configPrefix = "CommandLineArguments")
         {
             if (args == null || args.Length == 0)
                 return this;
@@ -122,7 +134,7 @@ namespace Pentagon.Extensions.Startup
                                  var coll = new Dictionary<string, string>();
 
                                  for (var i = 0; i < args.Length; i++)
-                                     coll.Add($"CommandLineArguments:{i}", args[i]);
+                                     coll.Add($"{configPrefix}:{i}", args[i]);
 
                                  builder.AddInMemoryCollection(coll);
                              });
@@ -131,7 +143,7 @@ namespace Pentagon.Extensions.Startup
         }
 
         /// <inheritdoc />
-        public IApplicationBuilder AddConfiguration(Action<IConfigurationBuilder> configure)
+        public IApplicationBuilder AddConfiguration([CanBeNull] Action<IConfigurationBuilder> configure)
         {
             if (configure == null)
                 return this;
