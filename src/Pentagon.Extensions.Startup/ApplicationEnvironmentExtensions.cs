@@ -14,6 +14,6 @@ namespace Pentagon.Extensions.Startup
 
         public static bool IsStaging(this IApplicationEnvironment env) => env.EnvironmentName == ApplicationEnvironmentNames.Staging;
 
-        public static bool IsValidName(string name) => name.IsAnyEqual(ApplicationEnvironmentNames.Development, ApplicationEnvironmentNames.Production, ApplicationEnvironmentNames.Production);
+        public static bool IsValid(string name) => ApplicationEnvironmentNames.Defined.Contains(name);
     }
 }

@@ -8,6 +8,7 @@ namespace Pentagon.Extensions.Startup
 {
     using System;
     using System.Collections.Generic;
+    using JetBrains.Annotations;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.FileProviders;
@@ -21,17 +22,24 @@ namespace Pentagon.Extensions.Startup
 
         IConfiguration Configuration { get; }
 
+        /// <summary>
+        /// Defines a new environment name.
+        /// </summary>
+        /// <param name="environment">The environment.</param>
+        /// <returns>The <see cref="IApplicationBuilder"/> instance that called this method.</returns>
+        IApplicationBuilder DefineEnvironment(string environment);
+
         IApplicationBuilder AddEnvironment(string environment);
 
         IApplicationBuilder AddEnvironmentFromEnvironmentVariable(string variableName = "ASPNETCORE_ENVIRONMENT");
 
-        IApplicationBuilder AddCommandLineArguments(string[] args);
+        IApplicationBuilder AddCommandLineArguments([CanBeNull] string[] args, string configPrefix = "CommandLineArguments");
 
         IApplicationBuilder AddJsonFileConfiguration(bool useEnvironmentSpecific = true,
                                                                   string name = "appsettings",
                                                                   IFileProvider fileProvider = null);
 
-        IApplicationBuilder AddConfiguration(Action<IConfigurationBuilder> configure = null);
+        IApplicationBuilder AddConfiguration([CanBeNull] Action<IConfigurationBuilder> configure = null);
 
         IApplicationBuilder AddLogging();
 

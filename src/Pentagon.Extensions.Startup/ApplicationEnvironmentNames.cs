@@ -6,6 +6,10 @@
 
 namespace Pentagon.Extensions.Startup
 {
+    using System;
+    using System.Collections.Generic;
+    using JetBrains.Annotations;
+
     public static class ApplicationEnvironmentNames
     {
         public const string Development = "Development";
@@ -13,5 +17,13 @@ namespace Pentagon.Extensions.Startup
         public const string Production = "Production";
 
         public const string Staging = "Staging";
+
+        [NotNull]
+        internal static HashSet<string> Defined = new HashSet<string>(new [] {Development, Production, Staging},StringComparer.InvariantCultureIgnoreCase);
+
+        internal static void Define(string name)
+        {
+            Defined.Add(name);
+        }
     }
 }
