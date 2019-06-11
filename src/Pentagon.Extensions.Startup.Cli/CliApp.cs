@@ -95,6 +95,11 @@ namespace Pentagon.Extensions.Startup.Cli
                 throw new ArgumentNullException($"{nameof(Services)}", $"The App is not properly built: cannot execute app.");
             }
 
+            if (RootCommand == null)
+            {
+                RootCommand = CommandHelper.GetRootCommand();
+            }
+
             var parserResult = await RootCommand.InvokeAsync(args);
 
             return parserResult;

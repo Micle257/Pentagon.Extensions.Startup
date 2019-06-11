@@ -8,13 +8,13 @@ namespace Pentagon.Extensions.Startup.Cli
 {
     using System;
 
-    class SubVerbAttribute : Attribute
+    public class SubCommandAttribute : Attribute
     {
-        public SubVerbAttribute(Type type)
+        public Type Type { get; }
+
+        public SubCommandAttribute(Type type)
         {
             Type = type;
         }
-
-        public Type Type { get; }
     }
 }
