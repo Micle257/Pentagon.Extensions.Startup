@@ -47,7 +47,7 @@ namespace Pentagon.Extensions.Startup
                     _builder = new ApplicationBuilder();
 
                     _builder.AddLogging()?
-                            .AddCommandLineArguments(args);
+                            .AddCommandLineArguments(args, "args");
 
                     BuildApp(_builder, args);
 

@@ -8,12 +8,13 @@ namespace Pentagon.Extensions.Startup.Cli
 {
     using System;
     using System.Collections.Generic;
+    using System.CommandLine;
+    using System.CommandLine.Invocation;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using CommandLine;
     using Console;
     using JetBrains.Annotations;
     using Microsoft.Extensions.DependencyInjection;
@@ -22,22 +23,14 @@ namespace Pentagon.Extensions.Startup.Cli
 
     public class CliApp : AppCore
     {
-        /// <summary>
-        /// Gets the fail callback. Default callback is no action.
-        /// </summary>
-        /// <value>
-        /// The <see cref="Func{TResult}"/> with return value of <see cref="Task"/>.
-        /// </value>
-        public virtual Func<IEnumerable<Error>, Task<int>> FailCallback { get; protected set; } = errors =>
-                                                                                                  {
-                                                                                                      ConsoleHelper.WriteError(errorValue: $"CLI parsing failed:{errors?.Aggregate(string.Empty, (a, b) => $" {a}\n {b}") ?? "\n Unknown reason"}");
-                                                                                                      return Task.FromResult(-1);
-                                                                                                  };
+        [NotNull]
+        public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
 
         /// <inheritdoc />
         protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
         {
-            appBuilder.AddCliCommands();
+            appBuilder.AddCliCommands()
+                      .AddProgramCancellationSource(CancellationTokenSource);
         }
 
         public virtual void OnExit(bool success)
@@ -80,99 +73,129 @@ namespace Pentagon.Extensions.Startup.Cli
             options.Reload();
         }
 
-        public Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
+        public async Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
+        {
+            if (_parallelCallbacks.Count == 0)
+                return await ExecuteCliCoreAsync(args, cancellationToken);
+
+            var core = ExecuteCliCoreAsync(args, cancellationToken);
+            var callbacks = _parallelCallbacks.Select(a => a());
+
+            await Task.WhenAny(new [] {core}.Concat(callbacks));
+
+            var result = core.Result;
+
+            return result;
+        }
+
+        public async Task<int> ExecuteCliCoreAsync(string[] args, CancellationToken cancellationToken = default)
         {
             if (Services == null)
             {
                 throw new ArgumentNullException($"{nameof(Services)}", $"The App is not properly built: cannot execute app.");
             }
 
-            var types = AppDomain.CurrentDomain
-                                 .GetAssemblies()
-                                 .SelectMany(a => a.GetTypes())
-                                 .Where(a => a.GetCustomAttribute<VerbAttribute>() != null)
-                                 .ToArray();
-
-            if (types.Length == 0)
+            if (RootCommand == null)
             {
-                ConsoleHelper.WriteError(errorValue: "No CLI verbs found in assembly.");
-                return Task.FromResult(-1);
+                RootCommand = CommandHelper.GetRootCommand();
             }
 
-            var parserResult = Parser.Default.ParseArguments(args, types);
+            var parserResult = await RootCommand.InvokeAsync(args);
 
-            ConfigureServices(args.ToArray());
-
-            var result = parserResult.MapResult(o => RunCommandByReflection(o, cancellationToken), FailCallback);
-
-            return result;
+            return parserResult;
         }
 
-        bool IsAbstractCliHandler(object options)
+        public void ConfigureCli(Action<RootCommand> callback)
         {
-            var optionsType = options.GetType().GetTypeInfo();
+            if (callback == null)
+                return;
 
-            var commandType = typeof(ICliHandler<>).MakeGenericType(optionsType);
+            var root = new RootCommand();
 
-            var command = Services?.GetService(commandType);
+            callback(root);
 
-            if (command == null)
-            {
-                ConsoleHelper.WriteError(errorValue: $"Cannot resolve command type from DI for options: {optionsType.Name}.");
-                return false;
-            }
-
-            if (command.GetType().BaseType == typeof(CliHandler<>).MakeGenericType(optionsType))
-            {
-                return true;
-            }
-
-            return false;
+            RootCommand = root;
         }
 
-        Task<int> RunCommandByReflection(object options, CancellationToken cancellationToken = default)
+        public async Task TerminateAsync(int code)
         {
-            var optionsType = options.GetType().GetTypeInfo();
+            // waiting for logging to finish writing data
+            await Task.Delay(500);
 
-            var commandType = typeof(ICliHandler<>).MakeGenericType(optionsType);
+            OnExit(code.IsAnyEqual(0, 2));
 
-            var command = Services?.GetService(commandType);
-
-            if (command == null)
-            {
-                ConsoleHelper.WriteError(errorValue: $"Cannot resolve command type from DI for options: {optionsType.Name}.");
-                return Task.FromResult(-1);
-            }
-
-            var runMethod = command.GetType().GetMethod(nameof(ICliHandler<object>.RunAsync));
-
-            var methodReturnValue = (Task<int>)runMethod.Invoke(command, new[] { options, cancellationToken });
-
-            return methodReturnValue;
+            System.Environment.Exit(code);
         }
 
-        public async Task<int> RunCommand<TCommand, TOptions>(TOptions options, Func<Task> failCallback)
-                where TCommand : ICliHandler<TOptions>
+        /// <inheritdoc />
+        protected override void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
         {
-            try
-            {
-                var command = Services.GetService<TCommand>();
 
-                return await command.RunAsync(options).ConfigureAwait(false);
-            }
-            catch (Exception e)
+            if (args.ExceptionObject is OperationCanceledException)
             {
-                Services.GetService<ILogger>()?.LogCritical(e, message: "Error while running play command.");
-                await (failCallback?.Invoke()).ConfigureAwait(false);
-                throw;
+                ConsoleHelper.WriteError("Program cancelled.");
+                TerminateAsync(2).Wait();
+                return;
             }
+
+            if (args.ExceptionObject is AggregateException ag)
+            {
+                ag.Handle(a =>
+                          {
+                              if (a is OperationCanceledException)
+                              {
+                                  ConsoleHelper.WriteError("Program cancelled.");
+                                  TerminateAsync(2).Wait();
+                                  return true;
+                              }
+
+                              return false;
+                          });
+            }
+
+            base.OnAppDomainUnhandledException(sender, args);
         }
+
+        public RootCommand RootCommand { get; private set; }
 
         public static Task RunAsync(string[] args)
         {
             var app = new CliApp();
 
             return app.ExecuteCliAsync(args);
+        }
+
+        [NotNull]
+        [ItemNotNull]
+        List<Func<Task<int>>> _parallelCallbacks = new List<Func<Task<int>>>();
+
+        public void RegisterParallelCallback([NotNull] Func<Task<int>> callback)
+        {
+            if (callback == null)
+                throw new ArgumentNullException(nameof(callback));
+
+            _parallelCallbacks.Add(callback);
+        }
+
+        public void RegisterCancelKeyHandler([NotNull] Func<ConsoleKeyInfo, bool> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+
+            RegisterParallelCallback(() =>
+                                     {
+                                         do
+                                         {
+                                             var read = Console.ReadKey(true);
+
+                                             if (predicate(read))
+                                             {
+                                                 CancellationTokenSource.Cancel();
+                                                 return Task.FromResult(1);
+                                             }
+                                         } while (true);
+                                     });
         }
     }
 }
