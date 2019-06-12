@@ -78,25 +78,34 @@
                                                  Attribute = a.GetCustomAttribute<CommandAttribute>(),
                                                  Command = GetCommand(a, a.GetCustomAttribute<CommandAttribute>())
                                          } )
+                            .Select(a =>
+                                    {
+                                        a.Options = GetOptions(a);
+                                        a.Command = GetCommand(a.Type, a.Attribute);
+                                        return a;
+                                    })
                             .ToArray();
+        }
+
+        static IReadOnlyList<OptionMetadata> GetOptions(CommandMetadata commandMetadata)
+        {
+            var options = commandMetadata.Type.GetProperties()
+                                         .Where(a => a.GetCustomAttribute<OptionsAttribute>() != null)
+                                         .Select(a => (a, a.GetCustomAttribute<OptionsAttribute>()));
+
+            return options.Select(a => new OptionMetadata
+                                       {
+                                               Attribute = a.Item2,
+                                               PropertyInfo = a.a
+                                       }).ToList();
         }
 
         static Command GetCommand(Type type, CommandAttribute attribute)
         {
-            var options = type.GetProperties()
-                              .Where(a => a.GetCustomAttribute<OptionsAttribute>() != null)
-                              .Select(a => (a, a.GetCustomAttribute<OptionsAttribute>()))
-                              .ToArray();
-
             var command = new Command(attribute.Name);
 
-            foreach (var (propertyInfo, optionsAttribute) in options)
-            {
-                command.AddOption( new Option(optionsAttribute.Aliases, argument: new Argument
-                                                                                  {
-                                                                                          ArgumentType = propertyInfo.PropertyType
-                                                                                  }));
-            }
+            ApplyOptions(type, command);
+            ApplyArguments(type, command);
 
             try { command.AddHandler(type); }
             catch 
@@ -104,6 +113,39 @@
             }
             
             return command;
+        }
+
+        static void ApplyArguments(Type type, Command command)
+        {
+            var arguments = type.GetProperties()
+                              .Where(a => a.GetCustomAttribute<CliArgumentAttribute>() != null)
+                              .Select(a => (a, a.GetCustomAttribute<CliArgumentAttribute>()))
+                              .ToArray();
+
+            var requiredCount = arguments.Select(a => a.Item2).Count(a => a.IsRequired);
+
+            command.Argument = new Argument { Arity = new ArgumentArity(requiredCount, arguments.Length) };
+
+            foreach (var (propertyInfo, argumentAttribute) in arguments)
+            {
+            }
+        }
+
+        static void ApplyOptions(Type type, Command command)
+        {
+            var options = type.GetProperties()
+                              .Where(a => a.GetCustomAttribute<OptionsAttribute>() != null)
+                              .Select(a => (a, a.GetCustomAttribute<OptionsAttribute>()))
+                              .ToArray();
+
+            foreach (var (propertyInfo, optionsAttribute) in options)
+            {
+                command.AddOption(new Option(optionsAttribute.Aliases,
+                                             argument: new Argument
+                                                       {
+                                                               ArgumentType = propertyInfo.PropertyType
+                                                       }));
+            }
         }
     }
 }

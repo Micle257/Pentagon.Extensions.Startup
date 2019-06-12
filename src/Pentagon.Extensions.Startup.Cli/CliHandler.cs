@@ -1,8 +1,11 @@
 ﻿namespace Pentagon.Extensions.Startup.Cli
 {
+    using System;
     using System.Collections.Generic;
+    using System.CommandLine;
     using System.CommandLine.Binding;
     using System.CommandLine.Invocation;
+    using System.Linq;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
@@ -28,9 +31,33 @@
 
             var type = typeof(TOptions);
 
-            var options = (TOptions)new ModelBinder(type).CreateInstance(bindingContext);
+            var options = new ReflectionModelBinder<TOptions>().CreateInstance(bindingContext);
 
             return RunAsync(options, _cancellationToken?.Token ?? CancellationToken.None);
+        }
+    }
+
+    public class ReflectionModelBinder<T> 
+    {
+        public T CreateInstance(BindingContext bindingContext)
+        {
+            var commandResult = bindingContext.ParseResult.CommandResult;
+
+            var meta = CommandHelper.GetHierarchy().FirstOrDefault(a => a.Value.Type == typeof(T)).Value;
+
+            var options = meta.Options;
+            var argument = meta.Command.Argument;
+
+            var result = Activator.CreateInstance<T>();
+
+            foreach (var optionMetadata in options)
+            {
+                var symbolResult = commandResult.Children.FirstOrDefault(a => a.HasAlias(optionMetadata.Attribute.Aliases.FirstOrDefault()));
+
+                optionMetadata.PropertyInfo.SetValue(result, symbolResult.Arguments.FirstOrDefault());
+            }
+
+            return result;
         }
     }
 }

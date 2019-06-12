@@ -5,7 +5,7 @@
     using Cli;
     using Microsoft.Extensions.Options;
 
-    public class FirstCommand : CliHandler<Lol2Command>
+    public class FirstCommand : CliHandler<FirstOptions>
     {
         readonly IOptionsMonitor<LolOptions> _optionsMonitor;
 
@@ -20,7 +20,7 @@
         }
 
         /// <inheritdoc />
-        public override async Task<int> RunAsync(Lol2Command options, CancellationToken cancellationToken = default)
+        public override async Task<int> RunAsync(FirstOptions options, CancellationToken cancellationToken = default)
         {
             Program.App.UpdateOptions<LolOptions>(o => { o.Lol = "first"; });
             Program.App.UpdateOptions<LolOptions>(o => { o.Lol = "second"; });
