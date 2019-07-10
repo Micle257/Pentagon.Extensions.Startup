@@ -8,6 +8,7 @@ namespace Pentagon.Extensions.Startup
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -43,6 +44,9 @@ namespace Pentagon.Extensions.Startup
         public IApplicationEnvironment Environment { get; private set; }
 
         /// <inheritdoc />
+        public IApplicationVersion Version { get; private set; }
+
+        /// <inheritdoc />
         public IConfiguration Configuration { get; private set; }
 
         /// <inheritdoc />
@@ -68,6 +72,7 @@ namespace Pentagon.Extensions.Startup
             return this;
         }
 
+        /// <inheritdoc />
         public IApplicationBuilder AddEnvironmentFromEnvironmentVariable(string variableName = null)
         {
             var env = variableName != null
@@ -87,6 +92,30 @@ namespace Pentagon.Extensions.Startup
                                   ApplicationName = ass,
                                   ContentRootPath = Directory.GetCurrentDirectory()
                           };
+
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IApplicationBuilder AddVersion(Assembly assembly)
+        {
+            try
+            {
+                assembly = assembly ?? Assembly.GetEntryAssembly();
+
+                var assemblyLocation = assembly.Location;
+                var ver = FileVersionInfo.GetVersionInfo(assemblyLocation).ProductVersion;
+
+                Version = new ApplicationVersion
+                          {
+                                  ProductVersion = ver,
+                                  AssemblyVersion = assembly.GetName().Version
+                          };
+            }
+            catch (Exception e)
+            {
+                BuildLog.Add((LogLevel.Error, LoggerState.FromCurrentPosition("Adding version failed."), e));
+            }
 
             return this;
         }
@@ -205,7 +234,11 @@ namespace Pentagon.Extensions.Startup
             if (Environment == null)
                 AddEnvironmentFromEnvironmentVariable();
 
+            if (Version == null)
+                AddVersion(null);
+
             Services.AddSingleton(Environment);
+            Services.AddSingleton(Version);
             Services.AddSingleton(Configuration);
 
             if (_isLoggingAdded)
