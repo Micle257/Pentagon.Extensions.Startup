@@ -41,7 +41,7 @@ namespace Pentagon.Extensions.Startup.Cli
             {
                 if (!success)
                 {
-                    ConsoleHelper.WriteError(errorValue: "Program execution failed.");
+                    ConsoleWriter.WriteError(errorValue: "Program execution failed.");
                     Console.WriteLine();
                 }
 
@@ -50,7 +50,7 @@ namespace Pentagon.Extensions.Startup.Cli
             }
             else if (!Environment.IsDevelopment() && !success)
             {
-                ConsoleHelper.WriteError(errorValue: "Program execution failed.");
+                ConsoleWriter.WriteError(errorValue: "Program execution failed.");
                 Console.WriteLine();
             }
         }
@@ -133,7 +133,7 @@ namespace Pentagon.Extensions.Startup.Cli
 
             if (args.ExceptionObject is OperationCanceledException)
             {
-                ConsoleHelper.WriteError("Program cancelled.");
+                ConsoleWriter.WriteError("Program cancelled.");
                 TerminateAsync(2).Wait();
                 return;
             }
@@ -144,7 +144,7 @@ namespace Pentagon.Extensions.Startup.Cli
                           {
                               if (a is OperationCanceledException)
                               {
-                                  ConsoleHelper.WriteError("Program cancelled.");
+                                  ConsoleWriter.WriteError("Program cancelled.");
                                   TerminateAsync(2).Wait();
                                   return true;
                               }

@@ -1,4 +1,5 @@
-﻿namespace Pentagon.Extensions.Startup.Cli {
+﻿namespace Pentagon.Extensions.Startup.Cli
+{
     using System;
 
     public class CliArgumentAttribute : Attribute
@@ -13,15 +14,19 @@
         }
     }
 
-    public class OptionsAttribute : Attribute
+    public class CliOptionAttribute : Attribute
     {
         public string Name { get; set; }
 
-        public OptionsAttribute(string name)
+        public CliOptionAttribute(params string[] aliases)
         {
-            Name = name;
+            Aliases = aliases ?? Array.Empty<string>();
         }
 
         public string[] Aliases { get; set; }
+
+        public string Description { get; set; }
+
+        public bool IsRequired { get; set; }
     }
 }

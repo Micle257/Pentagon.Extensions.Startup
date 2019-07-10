@@ -1,13 +1,13 @@
 ﻿namespace Pentagon.Extensions.Startup.Cli {
     using System;
 
-    public class CommandAttribute : Attribute
+    public class CliCommandAttribute : Attribute
     {
         public string Name { get; set; }
 
         public Type Parent { get; set; }
 
-        public CommandAttribute(string name)
+        public CliCommandAttribute(string name)
         {
             Name = name;
         }

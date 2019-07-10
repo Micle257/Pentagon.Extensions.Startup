@@ -37,7 +37,7 @@
         }
     }
 
-    public class ReflectionModelBinder<T> 
+    public class ReflectionModelBinder<T>
     {
         public T CreateInstance(BindingContext bindingContext)
         {
@@ -54,7 +54,28 @@
             {
                 var symbolResult = commandResult.Children.FirstOrDefault(a => a.HasAlias(optionMetadata.Attribute.Aliases.FirstOrDefault()));
 
-                optionMetadata.PropertyInfo.SetValue(result, symbolResult.Arguments.FirstOrDefault());
+                if (symbolResult != null)
+                {
+                    if (symbolResult.ArgumentResult is SuccessfulArgumentResult<bool> boolRes)
+                    {
+                        optionMetadata.PropertyInfo.SetValue(result, boolRes.Value);
+                    }
+                    else if (symbolResult.ArgumentResult is SuccessfulArgumentResult<object> res)
+                        optionMetadata.PropertyInfo.SetValue(result, res.Value);
+                    else
+                    {
+                        
+                    }
+                }
+            }
+
+            for (var i = 0; i < commandResult.Arguments.Count; i++)
+            {
+                var cmd = commandResult.Arguments.ElementAt(i);
+
+                var cliCommnand = meta.Arguments[i];
+
+                cliCommnand.PropertyInfo.SetValue(result, cmd);
             }
 
             return result;

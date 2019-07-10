@@ -2,10 +2,10 @@
     using System;
     using Cli;
 
-    [Command("first")]
+    [CliCommand("first")]
     public class FirstOptions
     {
-        [Options("--text", Aliases = new[] { "-t" })]
+        [CliOption("--text", Aliases = new[] { "-t" })]
         public string Text { get; set; }
 
         [CliArgument()]
