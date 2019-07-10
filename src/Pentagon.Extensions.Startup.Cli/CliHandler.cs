@@ -9,16 +9,17 @@
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
 
     public abstract class CliHandler<TOptions> : ICliHandler<TOptions>
     {
-        readonly CancellationTokenSource _cancellationToken;
+        readonly CancellationToken _cancellationToken;
 
         protected CliHandler()
         {
-            var s = DICore.Get<IProgramCancellationSource>();
+            var s = DICore.App.Services.GetService<IProgramCancellationSource>();
 
-            _cancellationToken = s?.CancellationTokenSource;
+            _cancellationToken = s?.Token ?? CancellationToken.None;
         }
 
         /// <inheritdoc />
@@ -33,7 +34,7 @@
 
             var options = new ReflectionModelBinder<TOptions>().CreateInstance(bindingContext);
 
-            return RunAsync(options, _cancellationToken?.Token ?? CancellationToken.None);
+            return RunAsync(options, _cancellationToken);
         }
     }
 

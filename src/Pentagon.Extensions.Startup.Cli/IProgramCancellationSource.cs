@@ -3,7 +3,9 @@
 
     public interface IProgramCancellationSource
     {
-        CancellationTokenSource CancellationTokenSource { get; }
+        CancellationToken Token { get; }
+
+        CancellationTokenSource TokenSource { get; }
 
         void Cancel();
     }

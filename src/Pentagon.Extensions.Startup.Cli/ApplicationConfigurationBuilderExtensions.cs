@@ -12,11 +12,12 @@ namespace Pentagon.Extensions.Startup.Cli
     using System.Threading;
     using JetBrains.Annotations;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Options;
             
     public static class ApplicationConfigurationBuilderExtensions
     {
-        public static IApplicationBuilder AddProgramCancellationSource([NotNull] this IApplicationBuilder builder, [NotNull] CancellationTokenSource tokenSource)
+        public static IApplicationBuilder AddProgramCancellationSource([NotNull] this IApplicationBuilder builder, CancellationTokenSource tokenSource = null)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
@@ -31,6 +32,9 @@ namespace Pentagon.Extensions.Startup.Cli
 
         public static IApplicationBuilder AddCliCommands(this IApplicationBuilder builder, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
         {
+            // ensure registered cancellation
+            builder.Services.TryAdd(ServiceDescriptor.Singleton<IProgramCancellationSource>(new ProgramCancellationSource(new CancellationTokenSource())));
+
             var commands = AppDomain.CurrentDomain
                                     .GetAssemblies()
                                     .SelectMany(a => a.GetTypes())

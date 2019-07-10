@@ -3,21 +3,30 @@
     using System.Threading;
     using JetBrains.Annotations;
 
-    class ProgramCancellationSource : IProgramCancellationSource
+    class ProgramCancellationSource : IProgramCancellationSource, IDisposable
     {
-        public ProgramCancellationSource([NotNull] CancellationTokenSource tokenSource)
+        public ProgramCancellationSource(CancellationTokenSource tokenSource)
         {
-            CancellationTokenSource = tokenSource ?? throw new ArgumentNullException(nameof(tokenSource));
+            TokenSource = tokenSource ?? new CancellationTokenSource();
         }
 
         /// <inheritdoc />
+        public CancellationToken Token => TokenSource.Token;
+
+        /// <inheritdoc />
         [NotNull]
-        public CancellationTokenSource CancellationTokenSource { get; }
+        public CancellationTokenSource TokenSource { get; }
 
         /// <inheritdoc />
         public void Cancel()
         {
-            CancellationTokenSource.Cancel();;
+            TokenSource.Cancel();
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            TokenSource.Dispose();
         }
     }
 }
