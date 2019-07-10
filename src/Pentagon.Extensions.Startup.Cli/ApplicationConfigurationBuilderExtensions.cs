@@ -25,15 +25,19 @@ namespace Pentagon.Extensions.Startup.Cli
             if (tokenSource == null)
                 throw new ArgumentNullException(nameof(tokenSource));
 
-            builder.Services.AddSingleton<IProgramCancellationSource>(new ProgramCancellationSource(tokenSource));
+            // ensure that is used latest implementation
+            builder.Services.Replace(ServiceDescriptor.Singleton<IProgramCancellationSource>(new ProgramCancellationSource(tokenSource)));
 
             return builder;
         }
 
-        public static IApplicationBuilder AddCliCommands(this IApplicationBuilder builder, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
+        public static IApplicationBuilder AddCliCommands([NotNull] this IApplicationBuilder builder, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
         {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
             // ensure registered cancellation
-            builder.Services.TryAdd(ServiceDescriptor.Singleton<IProgramCancellationSource>(new ProgramCancellationSource(new CancellationTokenSource())));
+            builder.AddProgramCancellationSource();
 
             var commands = AppDomain.CurrentDomain
                                     .GetAssemblies()

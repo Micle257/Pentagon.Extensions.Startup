@@ -17,7 +17,7 @@
 
         protected CliHandler()
         {
-            var s = DICore.App.Services.GetService<IProgramCancellationSource>();
+            var s = DICore.App.Services.GetRequiredService<IProgramCancellationSource>();
 
             _cancellationToken = s?.Token ?? CancellationToken.None;
         }

@@ -17,20 +17,20 @@ namespace Pentagon.Extensions.Startup.Cli
     using System.Threading.Tasks;
     using Console;
     using JetBrains.Annotations;
+    using Logging;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
     public class CliApp : AppCore
     {
-        [NotNull]
-        public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
-
         /// <inheritdoc />
-        protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
+        protected override void BuildApp([NotNull] IApplicationBuilder appBuilder, string[] args)
         {
-            appBuilder.AddCliCommands()
-                      .AddProgramCancellationSource(CancellationTokenSource);
+            if (appBuilder == null)
+                throw new ArgumentNullException(nameof(appBuilder));
+
+            appBuilder.AddCliCommands();
         }
 
         public virtual void OnExit(bool success)
@@ -182,17 +182,25 @@ namespace Pentagon.Extensions.Startup.Cli
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-
             RegisterParallelCallback(() =>
                                      {
+                                         var source = Services.GetService<IProgramCancellationSource>();
+
+                                         if (source == null)
+                                         {
+                                             DICore.Logger?.LogErrorSource($"Cancel key handler cannot execute: {nameof(IProgramCancellationSource)} is not registered.");
+                                             return Task.FromResult(1);
+                                         }
+
                                          do
                                          {
                                              var read = Console.ReadKey(true);
 
                                              if (predicate(read))
                                              {
-                                                 CancellationTokenSource.Cancel();
-                                                 return Task.FromResult(1);
+                                                 source.Cancel();
+                                                 DICore.Logger?.LogErrorSource($"Cancel key handler: cancel requested.");
+                                                 return Task.FromResult(2);
                                              }
                                          } while (true);
                                      });
