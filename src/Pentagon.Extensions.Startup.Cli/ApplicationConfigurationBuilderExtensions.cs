@@ -22,9 +22,6 @@ namespace Pentagon.Extensions.Startup.Cli
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            if (tokenSource == null)
-                throw new ArgumentNullException(nameof(tokenSource));
-
             // ensure that is used latest implementation
             builder.Services.Replace(ServiceDescriptor.Singleton<IProgramCancellationSource>(new ProgramCancellationSource(tokenSource)));
 
