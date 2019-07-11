@@ -9,7 +9,9 @@
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using Logging;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
 
     public abstract class CliHandler<TOptions> : ICliHandler<TOptions>
     {
@@ -25,8 +27,17 @@
         /// <inheritdoc />
         public abstract Task<int> RunAsync(TOptions options, CancellationToken cancellationToken = default);
 
+        protected virtual Task OnCancelAsync()
+        {
+            var logger = DICore.App?.Services?.GetService<ILogger<CliHandler<TOptions>>>();
+
+            logger?.LogDebugSource($"Command was cancelled: {nameof(TOptions)}.");
+
+            return Task.CompletedTask;
+        }
+
         /// <inheritdoc />
-        public Task<int> InvokeAsync(InvocationContext context)
+        public async Task<int> InvokeAsync(InvocationContext context)
         {
             var bindingContext = context.BindingContext;
 
@@ -34,7 +45,15 @@
 
             var options = new ReflectionModelBinder<TOptions>().CreateInstance(bindingContext);
 
-            return RunAsync(options, _cancellationToken);
+            try
+            {
+                return await RunAsync(options, _cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                await OnCancelAsync();
+                return StatusCodes.Cancel;
+            }
         }
     }
 
@@ -65,7 +84,7 @@
                         optionMetadata.PropertyInfo.SetValue(result, res.Value);
                     else
                     {
-                        
+
                     }
                 }
             }

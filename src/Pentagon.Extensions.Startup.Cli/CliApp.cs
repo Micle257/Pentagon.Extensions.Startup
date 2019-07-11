@@ -76,12 +76,12 @@ namespace Pentagon.Extensions.Startup.Cli
         public async Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
         {
             if (_parallelCallbacks.Count == 0)
-                return await ExecuteCliCoreAsync(args, cancellationToken);
+                return await ExecuteCliCoreAsync(args, cancellationToken).ConfigureAwait(false);
 
             var core = ExecuteCliCoreAsync(args, cancellationToken);
             var callbacks = _parallelCallbacks.Select(a => a());
 
-            await Task.WhenAny(new [] {core}.Concat(callbacks));
+            await Task.WhenAny(new [] {core}.Concat(callbacks)).ConfigureAwait(false);
 
             var result = core.Result;
 
@@ -100,9 +100,20 @@ namespace Pentagon.Extensions.Startup.Cli
                 RootCommand = CommandHelper.GetRootCommand();
             }
 
-            var parserResult = await RootCommand.InvokeAsync(args);
+            try
+            {
+                var parserResult = await RootCommand.InvokeAsync(args).ConfigureAwait(false);
 
-            return parserResult;
+                return parserResult;
+            }
+            catch (OperationCanceledException e)
+            {
+                var logger = DICore.App?.Services?.GetService<ILogger>();
+
+                logger?.LogDebugSource("Command was cancelled.", exception: e);
+
+                return StatusCodes.Cancel;
+            }
         }
 
         public void ConfigureCli(Action<RootCommand> callback)
@@ -120,9 +131,9 @@ namespace Pentagon.Extensions.Startup.Cli
         public async Task TerminateAsync(int code)
         {
             // waiting for logging to finish writing data
-            await Task.Delay(500);
+            await Task.Delay(500).ConfigureAwait(false);
 
-            OnExit(code.IsAnyEqual(0, 2));
+            OnExit(code.IsAnyEqual(StatusCodes.Success, StatusCodes.Cancel));
 
             System.Environment.Exit(code);
         }
@@ -130,11 +141,12 @@ namespace Pentagon.Extensions.Startup.Cli
         /// <inheritdoc />
         protected override void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
         {
-
             if (args.ExceptionObject is OperationCanceledException)
             {
                 ConsoleWriter.WriteError("Program cancelled.");
-                TerminateAsync(2).Wait();
+
+                TerminateAsync(StatusCodes.Cancel).GetAwaiter().GetResult();
+
                 return;
             }
 
@@ -145,7 +157,9 @@ namespace Pentagon.Extensions.Startup.Cli
                               if (a is OperationCanceledException)
                               {
                                   ConsoleWriter.WriteError("Program cancelled.");
-                                  TerminateAsync(2).Wait();
+
+                                  TerminateAsync(StatusCodes.Cancel).GetAwaiter().GetResult();
+
                                   return true;
                               }
 
