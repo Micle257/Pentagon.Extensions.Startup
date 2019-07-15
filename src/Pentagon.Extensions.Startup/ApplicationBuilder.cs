@@ -105,20 +105,13 @@ namespace Pentagon.Extensions.Startup
         }
 
         /// <inheritdoc />
-        public IApplicationBuilder AddVersion(Assembly assembly)
+        public IApplicationBuilder AddVersion(Assembly assembly = null)
         {
             try
             {
-                assembly = assembly ?? Assembly.GetEntryAssembly();
+                var version = ApplicationVersion.Create(assembly);
 
-                var assemblyLocation = assembly.Location;
-                var ver = FileVersionInfo.GetVersionInfo(assemblyLocation).ProductVersion;
-
-                Version = new ApplicationVersion
-                          {
-                                  ProductVersion = ver,
-                                  AssemblyVersion = assembly.GetName().Version
-                          };
+                Version = version;
             }
             catch (Exception e)
             {

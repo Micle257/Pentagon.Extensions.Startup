@@ -31,6 +31,8 @@ namespace Pentagon.Extensions.Startup
 
         public IApplicationEnvironment Environment => _builder?.Environment;
 
+        public IApplicationVersion Version => _builder?.Version;
+
         public IServiceProvider Services { get; private set; }
 
         public ILogger<AppCore> SelfLogger { get; protected set; }
