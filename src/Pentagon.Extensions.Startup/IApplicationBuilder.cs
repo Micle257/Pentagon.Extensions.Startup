@@ -25,6 +25,8 @@ namespace Pentagon.Extensions.Startup
 
         IConfiguration Configuration { get; }
 
+        IApplicationBuilder AttachInnerLogger(ILogger logger);
+
         /// <summary>
         /// Defines a new environment name.
         /// </summary>
@@ -62,7 +64,5 @@ namespace Pentagon.Extensions.Startup
         IApplicationBuilder AddDefaultLogger(string name);
 
         ApplicationBuilderResult Build();
-
-        IEnumerable<(string Text, LogLevel Level)> GetLoggerLines();
     }
 }

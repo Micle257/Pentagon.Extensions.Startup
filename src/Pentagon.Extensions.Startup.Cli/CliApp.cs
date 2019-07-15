@@ -110,7 +110,7 @@ namespace Pentagon.Extensions.Startup.Cli
             {
                 var logger = DICore.App?.Services?.GetService<ILogger>();
 
-                logger?.LogDebugSource("Command was cancelled.", exception: e);
+                logger?.LogDebug(e,"Command was cancelled.");
 
                 return StatusCodes.Cancel;
             }
@@ -202,7 +202,7 @@ namespace Pentagon.Extensions.Startup.Cli
 
                                          if (source == null)
                                          {
-                                             DICore.Logger?.LogErrorSource($"Cancel key handler cannot execute: {nameof(IProgramCancellationSource)} is not registered.");
+                                             DICore.Logger?.LogError("Cancel key handler cannot execute: {TypeName} is not registered.", nameof(IProgramCancellationSource));
                                              return Task.FromResult(1);
                                          }
 
@@ -213,7 +213,7 @@ namespace Pentagon.Extensions.Startup.Cli
                                              if (predicate(read))
                                              {
                                                  source.Cancel();
-                                                 DICore.Logger?.LogErrorSource($"Cancel key handler: cancel requested.");
+                                                 DICore.Logger?.LogInformation("Cancel key handler: cancel requested.");
                                                  return Task.FromResult(2);
                                              }
                                          } while (true);

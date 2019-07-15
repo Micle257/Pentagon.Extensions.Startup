@@ -35,7 +35,7 @@ namespace Pentagon.Extensions.Startup
                             .Build();
         }
 
-        public IList<(LogLevel Level, LoggerState State, Exception Exception)> BuildLog { get; } = new List<(LogLevel Level, LoggerState State, Exception Exception)>();
+        public ILogger BuildLog { get; set; } 
 
         /// <inheritdoc />
         public IServiceCollection Services { get; } = new ServiceCollection();
@@ -48,6 +48,14 @@ namespace Pentagon.Extensions.Startup
 
         /// <inheritdoc />
         public IConfiguration Configuration { get; private set; }
+
+        /// <inheritdoc />
+        public IApplicationBuilder AttachInnerLogger(ILogger logger)
+        {
+            BuildLog = logger;
+
+            return this;
+        }
 
         /// <inheritdoc />
         public IApplicationBuilder DefineEnvironment(string environment)
@@ -114,7 +122,7 @@ namespace Pentagon.Extensions.Startup
             }
             catch (Exception e)
             {
-                BuildLog.Add((LogLevel.Error, LoggerState.FromCurrentPosition("Adding version failed."), e));
+                BuildLog?.LogError(e, "Adding version failed.");
             }
 
             return this;
@@ -136,8 +144,7 @@ namespace Pentagon.Extensions.Startup
                                  {
                                      if (Environment == null)
                                      {
-                                         BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "The environment of app is null; environment specific configuration file cannot be used."),
-                                                          new ArgumentNullException(nameof(Environment), message: "The environment of app is null; environment specific configuration file cannot be used.")));
+                                         BuildLog?.LogWarning(new ArgumentNullException(nameof(Environment), message: "The environment of app is null; environment specific configuration file cannot be used."), "The environment of app is null; environment specific configuration file cannot be used.");
                                      }
                                      else
                                      {
@@ -211,7 +218,7 @@ namespace Pentagon.Extensions.Startup
                                     if (configuration != null)
                                         options.AddConfiguration(configuration);
                                     else
-                                        BuildLog.Add((LogLevel.Warning, LoggerState.FromCurrentPosition(message: "Configuration is not specified. Default logging option will be used."), null));
+                                        BuildLog.LogWarning("Configuration is not specified. Default logging option will be used.");
 
                                     configure?.Invoke(options);
                                 });
@@ -244,15 +251,9 @@ namespace Pentagon.Extensions.Startup
             if (_isLoggingAdded)
                 Services.AddTransient(provider => provider.GetService<ILoggerFactory>().CreateLogger(Environment.ApplicationName ?? _defaultLoggerName));
 
-            var result = new ApplicationBuilderResult(Services.BuildServiceProvider(), BuildLog);
+            var result = new ApplicationBuilderResult(Services.BuildServiceProvider());
 
             return result;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<(string Text, LogLevel Level)> GetLoggerLines()
-        {
-            return BuildLog.Select(a => (LoggerSourceFormatter.GetLogMessage(a.State, null, a.Exception), a.Level));
         }
     }
 }

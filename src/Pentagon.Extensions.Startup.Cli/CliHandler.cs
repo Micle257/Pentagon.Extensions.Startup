@@ -31,7 +31,7 @@
         {
             var logger = DICore.App?.Services?.GetService<ILogger<CliHandler<TOptions>>>();
 
-            logger?.LogDebugSource($"Command was cancelled: {nameof(TOptions)}.");
+            logger?.LogDebug("Command was cancelled: {TypeName}.", typeof(TOptions).Name);
 
             return Task.CompletedTask;
         }
