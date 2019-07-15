@@ -8,35 +8,28 @@ namespace Pentagon.Extensions.Startup.Cli
 {
     using System;
     using System.Collections.Generic;
+    using System.CommandLine;
+    using System.CommandLine.Invocation;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using CommandLine;
     using Console;
     using JetBrains.Annotations;
+    using Logging;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
     public class CliApp : AppCore
     {
-        /// <summary>
-        /// Gets the fail callback. Default callback is no action.
-        /// </summary>
-        /// <value>
-        /// The <see cref="Func{TResult}"/> with return value of <see cref="Task"/>.
-        /// </value>
-        public virtual Func<IEnumerable<Error>, Task<int>> FailCallback { get; protected set; } = errors =>
-                                                                                                  {
-                                                                                                      ConsoleHelper.WriteError(errorValue: $"CLI parsing failed:{errors?.Aggregate(string.Empty, (a, b) => $" {a}\n {b}") ?? "\n Unknown reason"}");
-                                                                                                      return Task.FromResult(-1);
-                                                                                                  };
-
         /// <inheritdoc />
-        protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
+        protected override void BuildApp([NotNull] IApplicationBuilder appBuilder, string[] args)
         {
+            if (appBuilder == null)
+                throw new ArgumentNullException(nameof(appBuilder));
+
             appBuilder.AddCliCommands();
         }
 
@@ -48,7 +41,7 @@ namespace Pentagon.Extensions.Startup.Cli
             {
                 if (!success)
                 {
-                    ConsoleHelper.WriteError(errorValue: "Program execution failed.");
+                    ConsoleWriter.WriteError(errorValue: "Program execution failed.");
                     Console.WriteLine();
                 }
 
@@ -57,7 +50,7 @@ namespace Pentagon.Extensions.Startup.Cli
             }
             else if (!Environment.IsDevelopment() && !success)
             {
-                ConsoleHelper.WriteError(errorValue: "Program execution failed.");
+                ConsoleWriter.WriteError(errorValue: "Program execution failed.");
                 Console.WriteLine();
             }
         }
@@ -80,99 +73,151 @@ namespace Pentagon.Extensions.Startup.Cli
             options.Reload();
         }
 
-        public Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
+        public async Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
+        {
+            if (_parallelCallbacks.Count == 0)
+                return await ExecuteCliCoreAsync(args, cancellationToken).ConfigureAwait(false);
+
+            var core = ExecuteCliCoreAsync(args, cancellationToken);
+            var callbacks = _parallelCallbacks.Select(a => a());
+
+            await Task.WhenAny(new [] {core}.Concat(callbacks)).ConfigureAwait(false);
+
+            var result = core.Result;
+
+            return result;
+        }
+
+        public async Task<int> ExecuteCliCoreAsync(string[] args, CancellationToken cancellationToken = default)
         {
             if (Services == null)
             {
                 throw new ArgumentNullException($"{nameof(Services)}", $"The App is not properly built: cannot execute app.");
             }
 
-            var types = AppDomain.CurrentDomain
-                                 .GetAssemblies()
-                                 .SelectMany(a => a.GetTypes())
-                                 .Where(a => a.GetCustomAttribute<VerbAttribute>() != null)
-                                 .ToArray();
-
-            if (types.Length == 0)
+            if (RootCommand == null)
             {
-                ConsoleHelper.WriteError(errorValue: "No CLI verbs found in assembly.");
-                return Task.FromResult(-1);
+                RootCommand = CommandHelper.GetRootCommand();
             }
 
-            var parserResult = Parser.Default.ParseArguments(args, types);
-
-            ConfigureServices(args.ToArray());
-
-            var result = parserResult.MapResult(o => RunCommandByReflection(o, cancellationToken), FailCallback);
-
-            return result;
-        }
-
-        bool IsAbstractCliHandler(object options)
-        {
-            var optionsType = options.GetType().GetTypeInfo();
-
-            var commandType = typeof(ICliHandler<>).MakeGenericType(optionsType);
-
-            var command = Services?.GetService(commandType);
-
-            if (command == null)
-            {
-                ConsoleHelper.WriteError(errorValue: $"Cannot resolve command type from DI for options: {optionsType.Name}.");
-                return false;
-            }
-
-            if (command.GetType().BaseType == typeof(CliHandler<>).MakeGenericType(optionsType))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        Task<int> RunCommandByReflection(object options, CancellationToken cancellationToken = default)
-        {
-            var optionsType = options.GetType().GetTypeInfo();
-
-            var commandType = typeof(ICliHandler<>).MakeGenericType(optionsType);
-
-            var command = Services?.GetService(commandType);
-
-            if (command == null)
-            {
-                ConsoleHelper.WriteError(errorValue: $"Cannot resolve command type from DI for options: {optionsType.Name}.");
-                return Task.FromResult(-1);
-            }
-
-            var runMethod = command.GetType().GetMethod(nameof(ICliHandler<object>.RunAsync));
-
-            var methodReturnValue = (Task<int>)runMethod.Invoke(command, new[] { options, cancellationToken });
-
-            return methodReturnValue;
-        }
-
-        public async Task<int> RunCommand<TCommand, TOptions>(TOptions options, Func<Task> failCallback)
-                where TCommand : ICliHandler<TOptions>
-        {
             try
             {
-                var command = Services.GetService<TCommand>();
+                var parserResult = await RootCommand.InvokeAsync(args).ConfigureAwait(false);
 
-                return await command.RunAsync(options).ConfigureAwait(false);
+                return parserResult;
             }
-            catch (Exception e)
+            catch (OperationCanceledException e)
             {
-                Services.GetService<ILogger>()?.LogCritical(e, message: "Error while running play command.");
-                await (failCallback?.Invoke()).ConfigureAwait(false);
-                throw;
+                var logger = DICore.App?.Services?.GetService<ILogger>();
+
+                logger?.LogDebug(e,"Command was cancelled.");
+
+                return StatusCodes.Cancel;
             }
         }
+
+        public void ConfigureCli(Action<RootCommand> callback)
+        {
+            if (callback == null)
+                return;
+
+            var root = new RootCommand();
+
+            callback(root);
+
+            RootCommand = root;
+        }
+
+        public async Task TerminateAsync(int code)
+        {
+            // waiting for logging to finish writing data
+            await Task.Delay(500).ConfigureAwait(false);
+
+            OnExit(code.IsAnyEqual(StatusCodes.Success, StatusCodes.Cancel));
+
+            System.Environment.Exit(code);
+        }
+
+        /// <inheritdoc />
+        protected override void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
+        {
+            if (args.ExceptionObject is OperationCanceledException)
+            {
+                ConsoleWriter.WriteError("Program cancelled.");
+
+                TerminateAsync(StatusCodes.Cancel).GetAwaiter().GetResult();
+
+                return;
+            }
+
+            if (args.ExceptionObject is AggregateException ag)
+            {
+                ag.Handle(a =>
+                          {
+                              if (a is OperationCanceledException)
+                              {
+                                  ConsoleWriter.WriteError("Program cancelled.");
+
+                                  TerminateAsync(StatusCodes.Cancel).GetAwaiter().GetResult();
+
+                                  return true;
+                              }
+
+                              return false;
+                          });
+            }
+
+            base.OnAppDomainUnhandledException(sender, args);
+        }
+
+        public RootCommand RootCommand { get; private set; }
 
         public static Task RunAsync(string[] args)
         {
             var app = new CliApp();
 
             return app.ExecuteCliAsync(args);
+        }
+
+        [NotNull]
+        [ItemNotNull]
+        List<Func<Task<int>>> _parallelCallbacks = new List<Func<Task<int>>>();
+
+        public void RegisterParallelCallback([NotNull] Func<Task<int>> callback)
+        {
+            if (callback == null)
+                throw new ArgumentNullException(nameof(callback));
+
+            _parallelCallbacks.Add(callback);
+        }
+
+        public void RegisterCancelKeyHandler([NotNull] Func<ConsoleKeyInfo, bool> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            RegisterParallelCallback(() =>
+                                     {
+                                         var source = Services.GetService<IProgramCancellationSource>();
+
+                                         if (source == null)
+                                         {
+                                             DICore.Logger?.LogError("Cancel key handler cannot execute: {TypeName} is not registered.", nameof(IProgramCancellationSource));
+                                             return Task.FromResult(1);
+                                         }
+
+                                         do
+                                         {
+                                             var read = Console.ReadKey(true);
+
+                                             if (predicate(read))
+                                             {
+                                                 source.Cancel();
+                                                 DICore.Logger?.LogInformation("Cancel key handler: cancel requested.");
+                                                 return Task.FromResult(2);
+                                             }
+                                         } while (true);
+                                     });
         }
     }
 }

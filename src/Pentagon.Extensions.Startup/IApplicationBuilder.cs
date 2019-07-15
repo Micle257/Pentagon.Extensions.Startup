@@ -8,6 +8,7 @@ namespace Pentagon.Extensions.Startup
 {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
     using JetBrains.Annotations;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +21,11 @@ namespace Pentagon.Extensions.Startup
 
         IApplicationEnvironment Environment { get; }
 
+        IApplicationVersion Version { get; }
+
         IConfiguration Configuration { get; }
+
+        IApplicationBuilder AttachInnerLogger(ILogger logger);
 
         /// <summary>
         /// Defines a new environment name.
@@ -32,6 +37,13 @@ namespace Pentagon.Extensions.Startup
         IApplicationBuilder AddEnvironment(string environment);
 
         IApplicationBuilder AddEnvironmentFromEnvironmentVariable(string variableName = "ASPNETCORE_ENVIRONMENT");
+
+        /// <summary>
+        /// Adds the version from the give assembly.
+        /// </summary>
+        /// <param name="assembly">The assembly. Default is <see cref="Assembly.GetEntryAssembly"/></param>
+        /// <returns>The <see cref="IApplicationBuilder"/> instance that called this method.</returns>
+        IApplicationBuilder AddVersion(Assembly assembly = null);
 
         IApplicationBuilder AddCommandLineArguments([CanBeNull] string[] args, string configPrefix = "CommandLineArguments");
 
@@ -52,7 +64,5 @@ namespace Pentagon.Extensions.Startup
         IApplicationBuilder AddDefaultLogger(string name);
 
         ApplicationBuilderResult Build();
-
-        IEnumerable<(string Text, LogLevel Level)> GetLoggerLines();
     }
 }

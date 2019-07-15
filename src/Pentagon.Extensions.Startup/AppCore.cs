@@ -31,7 +31,11 @@ namespace Pentagon.Extensions.Startup
 
         public IApplicationEnvironment Environment => _builder?.Environment;
 
+        public IApplicationVersion Version => _builder?.Version;
+
         public IServiceProvider Services { get; private set; }
+
+        public ILogger<AppCore> SelfLogger { get; protected set; }
 
         /// <summary> Starts the startup procedure, configures the DI container. </summary>
         /// <param name="args"> The program arguments. </param>
@@ -46,8 +50,11 @@ namespace Pentagon.Extensions.Startup
                 {
                     _builder = new ApplicationBuilder();
 
+                    if (SelfLogger != null)
+                        _builder.AttachInnerLogger(SelfLogger);
+
                     _builder.AddLogging()?
-                            .AddCommandLineArguments(args);
+                            .AddCommandLineArguments(args, "args");
 
                     BuildApp(_builder, args);
 
@@ -60,8 +67,6 @@ namespace Pentagon.Extensions.Startup
                         throw new ArgumentNullException(nameof(result));
 
                     Services = result.Provider;
-
-                    result.ApplyLogMessages(Services.GetService<ILogger>());
 
                     ConfigureUnhandledExceptionHandling();
                 }
@@ -136,15 +141,13 @@ namespace Pentagon.Extensions.Startup
 
         protected virtual void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
         {
-            Services.GetService<ILogger>()?.LogSource(LogLevel.Error,
-                                                      message: "Exception unhandled (AppDomain).",
-                                                      new EventId(),
-                                                      args.ExceptionObject as Exception);
+            Services.GetService<ILogger>()?.LogError(args.ExceptionObject as Exception,
+                                                      message: "Exception unhandled (AppDomain).");
         }
 
         protected virtual void OnUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs args)
         {
-            Services.GetService<ILogger>()?.LogSource(LogLevel.Error, message: "Exception unhandled (TaskScheduler).", new EventId(), args.Exception);
+            Services.GetService<ILogger>()?.LogError(args.Exception, "Exception unhandled (TaskScheduler).");
         }
 
         void ConfigureUnhandledExceptionHandling()

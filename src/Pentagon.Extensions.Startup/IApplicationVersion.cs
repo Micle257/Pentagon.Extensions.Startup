@@ -1,20 +1,17 @@
 ﻿// -----------------------------------------------------------------------
-//  <copyright file="SubVerbAttribute.cs">
+//  <copyright file="IApplicationVersion.cs">
 //   Copyright (c) Michal Pokorný. All Rights Reserved.
 //  </copyright>
 // -----------------------------------------------------------------------
 
-namespace Pentagon.Extensions.Startup.Cli
+namespace Pentagon.Extensions.Startup
 {
     using System;
 
-    class SubVerbAttribute : Attribute
+    public interface IApplicationVersion
     {
-        public SubVerbAttribute(Type type)
-        {
-            Type = type;
-        }
+        string ProductVersion { get; }
 
-        public Type Type { get; }
+        Version AssemblyVersion { get; }
     }
 }

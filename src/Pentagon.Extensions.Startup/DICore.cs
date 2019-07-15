@@ -37,7 +37,7 @@
             }
             catch (InvalidOperationException e)
             {
-                Logger?.LogError(e, $"The type {serviceType.Name} cannot be resolved via IoC.");
+                //Logger?.LogError(e, $"The type {serviceType.Name} cannot be resolved via IoC.");
                 throw;
             }
         }
