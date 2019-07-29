@@ -27,13 +27,6 @@ namespace Pentagon.Extensions.Startup
 
         IApplicationBuilder AttachInnerLogger(ILogger logger);
 
-        /// <summary>
-        /// Defines a new environment name.
-        /// </summary>
-        /// <param name="environment">The environment.</param>
-        /// <returns>The <see cref="IApplicationBuilder"/> instance that called this method.</returns>
-        IApplicationBuilder DefineEnvironment(string environment);
-
         IApplicationBuilder AddEnvironment(string environment);
 
         IApplicationBuilder AddEnvironmentFromEnvironmentVariable(string variableName = "ASPNETCORE_ENVIRONMENT");

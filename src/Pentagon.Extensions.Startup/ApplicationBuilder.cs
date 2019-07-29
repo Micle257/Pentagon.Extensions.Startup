@@ -24,13 +24,15 @@ namespace Pentagon.Extensions.Startup
 
     public class ApplicationBuilder : IApplicationBuilder
     {
+        [NotNull]
+        internal static HashSet<string> Defined = new HashSet<string>(ApplicationEnvironmentNames.Defined, StringComparer.InvariantCultureIgnoreCase);
+
         string _defaultLoggerName = "Default";
         bool _isLoggingAdded;
 
         public ApplicationBuilder()
         {
             Configuration = new ConfigurationBuilder()
-                            .AddEnvironmentVariables()
                             .SetBasePath(Directory.GetCurrentDirectory())
                             .Build();
         }
@@ -58,9 +60,9 @@ namespace Pentagon.Extensions.Startup
         }
 
         /// <inheritdoc />
-        public IApplicationBuilder DefineEnvironment(string environment)
+        public IApplicationBuilder AddEnvironmentVariables()
         {
-            ApplicationEnvironmentNames.Define(environment);
+            AddConfiguration(builder => builder.AddEnvironmentVariables());
 
             return this;
         }
