@@ -21,6 +21,7 @@ namespace Pentagon.Extensions.Startup.Cli
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
+    using Threading;
 
     public class CliApp : AppCore
     {
@@ -81,7 +82,9 @@ namespace Pentagon.Extensions.Startup.Cli
             var core = ExecuteCliCoreAsync(args, cancellationToken);
             var callbacks = _parallelCallbacks.Select(a => a());
 
-            await Task.WhenAny(new [] {core}.Concat(callbacks)).ConfigureAwait(false);
+            await Task.WhenAny(new[] { core }.Concat(callbacks))
+                      .WithCancellation(cancellationToken)
+                      .ConfigureAwait(false);
 
             var result = core.Result;
 
@@ -110,7 +113,7 @@ namespace Pentagon.Extensions.Startup.Cli
             {
                 var logger = DICore.App?.Services?.GetService<ILogger>();
 
-                logger?.LogDebug(e,"Command was cancelled.");
+                logger?.LogDebug(e, "Command was cancelled.");
 
                 return StatusCodes.Cancel;
             }
@@ -196,26 +199,35 @@ namespace Pentagon.Extensions.Startup.Cli
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            RegisterParallelCallback(() =>
+            RegisterParallelCallback(async () =>
                                      {
                                          var source = Services.GetService<IProgramCancellationSource>();
 
                                          if (source == null)
                                          {
                                              DICore.Logger?.LogError("Cancel key handler cannot execute: {TypeName} is not registered.", nameof(IProgramCancellationSource));
-                                             return Task.FromResult(1);
+                                             return (1);
                                          }
 
                                          do
                                          {
-                                             var read = Console.ReadKey(true);
+                                             ConsoleKeyInfo read;
+
+                                             if (Console.KeyAvailable)
+                                             {
+                                                 read = Console.ReadKey(true);
+                                             }
+
+                                             // await Task.Yield();
 
                                              if (predicate(read))
                                              {
                                                  source.Cancel();
                                                  DICore.Logger?.LogInformation("Cancel key handler: cancel requested.");
-                                                 return Task.FromResult(2);
+                                                 return (2);
                                              }
+
+                                             await Task.Delay(100);
                                          } while (true);
                                      });
         }
