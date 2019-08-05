@@ -88,17 +88,21 @@ namespace Pentagon.Extensions.Startup.Cli
 
         public async Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
         {
+            if (!cancellationToken.CanBeCanceled)
+            {
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, Services.GetService<IProgramCancellationSource>().Token).Token;
+            }
+
             try
             {
                 if (_parallelCallbacks.Count == 0)
-                    return await ExecuteCliCoreAsync(args, cancellationToken).ConfigureAwait(false);
+                    return await ExecuteCliCoreAsync(args).ConfigureAwait(false);
 
-                var core = ExecuteCliCoreAsync(args, cancellationToken);
+                var core = ExecuteCliCoreAsync(args);
 
                 var callbacks = _parallelCallbacks.Select(a => a(cancellationToken));
 
-                await Task.WhenAny(new[] { core }.Concat(callbacks))
-                          .WithCancellation(cancellationToken);
+                await Task.WhenAny(new[] { core }.Concat(callbacks));
 
                 var result = core.Result;
 
@@ -110,7 +114,7 @@ namespace Pentagon.Extensions.Startup.Cli
             }
         }
 
-        public async Task<int> ExecuteCliCoreAsync(string[] args, CancellationToken cancellationToken = default)
+        public async Task<int> ExecuteCliCoreAsync(string[] args)
         {
             if (Services == null)
             {
