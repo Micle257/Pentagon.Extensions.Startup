@@ -28,6 +28,7 @@ namespace Pentagon.Extensions.Startup
         internal static HashSet<string> Defined = new HashSet<string>(ApplicationEnvironmentNames.Defined, StringComparer.InvariantCultureIgnoreCase);
 
         string _defaultLoggerName = "Default";
+
         bool _isLoggingAdded;
 
         public ApplicationBuilder()

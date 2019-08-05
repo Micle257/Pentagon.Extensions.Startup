@@ -12,14 +12,39 @@
 
         public static IApplicationEnvironment Environment => Get<IApplicationEnvironment>();
 
+        public static IApplicationVersion Version => Get<IApplicationVersion>();
+
         public static AppCore App { get; set; }
 
         public static TService Get<TService>()
+            where TService : class
         {
-            return (TService) Get(typeof(TService));
+            var service = Get(typeof(TService));
+
+            return service as TService;
+        }
+
+        public static TService GetRequired<TService>()
+                where TService : class
+        {
+            var service = GetRequired(typeof(TService));
+
+            return service as TService;
         }
 
         public static object Get(Type serviceType)
+        {
+            try
+            {
+                return App?.Services?.GetService(serviceType);
+            }
+            catch (InvalidOperationException e)
+            {
+                return null;
+            }
+        }
+
+        public static object GetRequired(Type serviceType)
         {
             if (App == null)
             {

@@ -9,6 +9,7 @@
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using JetBrains.Annotations;
     using Logging;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -19,13 +20,13 @@
 
         protected CliHandler()
         {
-            var s = DICore.App.Services.GetRequiredService<IProgramCancellationSource>();
+            var s = DICore.Get<IProgramCancellationSource>();
 
             _cancellationToken = s?.Token ?? CancellationToken.None;
         }
 
         /// <inheritdoc />
-        public abstract Task<int> RunAsync(TOptions options, CancellationToken cancellationToken = default);
+        public abstract Task<int> RunAsync(TOptions options, CancellationToken cancellationToken);
 
         protected virtual Task OnCancelAsync()
         {
@@ -37,7 +38,8 @@
         }
 
         /// <inheritdoc />
-        public async Task<int> InvokeAsync(InvocationContext context)
+        [NotNull]
+        public async Task<int> InvokeAsync([NotNull] InvocationContext context)
         {
             var bindingContext = context.BindingContext;
 
@@ -59,9 +61,12 @@
 
     public class ReflectionModelBinder<T>
     {
-        public T CreateInstance(BindingContext bindingContext)
+        public T CreateInstance([NotNull] BindingContext bindingContext)
         {
-            var commandResult = bindingContext.ParseResult.CommandResult;
+            if (bindingContext == null)
+                throw new ArgumentNullException(nameof(bindingContext));
+
+            var commandResult = bindingContext.ParseResult?.CommandResult;
 
             var meta = CommandHelper.GetHierarchy().FirstOrDefault(a => a.Value.Type == typeof(T)).Value;
 
