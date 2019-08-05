@@ -32,7 +32,16 @@
         {
             var logger = DICore.App?.Services?.GetService<ILogger<CliHandler<TOptions>>>();
 
-            logger?.LogDebug("Command was cancelled: {TypeName}.", typeof(TOptions).Name);
+            logger?.LogDebug("Command was cancelled: {TypeName}.", GetType().Name);
+
+            return Task.CompletedTask;
+        }
+
+        protected virtual Task OnErrorAsync(Exception e)
+        {
+            var logger = DICore.App?.Services?.GetService<ILogger<CliHandler<TOptions>>>();
+
+            logger?.LogError(e,"Command execution failed: {TypeName}. {ExceptionMessage}", GetType().Name, e.Message);
 
             return Task.CompletedTask;
         }
@@ -55,6 +64,11 @@
             {
                 await OnCancelAsync();
                 return StatusCodes.Cancel;
+            }
+            catch (Exception e)
+            {
+                await OnErrorAsync(e);
+                return StatusCodes.Error;
             }
         }
     }

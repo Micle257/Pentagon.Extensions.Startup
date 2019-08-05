@@ -68,6 +68,8 @@ namespace Pentagon.Extensions.Startup
                     Services = result.Provider;
 
                     ConfigureUnhandledExceptionHandling();
+
+                    OnPostConfigureServices();
                 }
                 finally
                 {
@@ -75,6 +77,8 @@ namespace Pentagon.Extensions.Startup
                 }
             }
         }
+
+        protected virtual void OnPostConfigureServices() { }
 
         public int Execute(AppExecutionType execution, ExecutionOptions options = null) => ExecuteAsync(execution, options).Result;
 
