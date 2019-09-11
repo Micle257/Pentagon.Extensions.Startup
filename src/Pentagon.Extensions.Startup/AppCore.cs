@@ -7,6 +7,7 @@
 namespace Pentagon.Extensions.Startup
 {
     using System;
+    using System.Diagnostics;
     using System.Threading.Tasks;
     using JetBrains.Annotations;
     using Logging;
@@ -22,16 +23,20 @@ namespace Pentagon.Extensions.Startup
 
         IApplicationBuilder _builder;
 
+        [NotNull]
+        IApplicationBuilder Builder => _builder ?? (_builder = new ApplicationBuilder());
+
         /// <summary> The value indicates if the <see cref="ConfigureServices" /> methods was called. </summary>
         bool _startupCalled;
 
         /// <summary> Gets the configuration instance. </summary>
         /// <value> The <see cref="IConfiguration" />. </value>
-        public IConfiguration Configuration => _builder?.Configuration;
+        [NotNull]
+        public IConfiguration Configuration => Builder.Configuration;
 
-        public IApplicationEnvironment Environment => _builder?.Environment;
+        public IApplicationEnvironment Environment => Builder.Environment;
 
-        public IApplicationVersion Version => _builder?.Version;
+        public IApplicationVersion Version => Builder.Version;
 
         public IServiceProvider Services { get; private set; }
 
@@ -46,29 +51,25 @@ namespace Pentagon.Extensions.Startup
                 if (_startupCalled)
                     return;
 
+                args = args ?? Array.Empty<string>();
+
                 try
                 {
-                    _builder = new ApplicationBuilder();
-
                     if (SelfLogger != null)
-                        _builder.AttachInnerLogger(SelfLogger);
+                        Builder.AttachInnerLogger(SelfLogger);
 
-                    _builder.AddLogging()?
+                    Builder.AddLogging()?
                             .AddCommandLineArguments(args, "args");
 
-                    BuildApp(_builder, args);
+                    BuildApp(Builder, args);
 
-                    if (_builder == null)
-                        throw new ArgumentNullException(nameof(_builder));
-
-                    var result = _builder?.Build();
-
-                    if (result == null)
-                        throw new ArgumentNullException(nameof(result));
+                    var result = Builder.Build();
 
                     Services = result.Provider;
 
                     ConfigureUnhandledExceptionHandling();
+
+                    OnPostConfigureServices();
                 }
                 finally
                 {
@@ -76,6 +77,8 @@ namespace Pentagon.Extensions.Startup
                 }
             }
         }
+
+        protected virtual void OnPostConfigureServices() { }
 
         public int Execute(AppExecutionType execution, ExecutionOptions options = null) => ExecuteAsync(execution, options).Result;
 
@@ -137,7 +140,7 @@ namespace Pentagon.Extensions.Startup
         /// <summary> Builds the application. </summary>
         /// <param name="appBuilder"> The application builder. </param>
         /// <param name="args"> The program arguments. </param>
-        protected abstract void BuildApp(IApplicationBuilder appBuilder, string[] args);
+        protected abstract void BuildApp([NotNull] IApplicationBuilder appBuilder, [NotNull] string[] args);
 
         protected virtual void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
         {

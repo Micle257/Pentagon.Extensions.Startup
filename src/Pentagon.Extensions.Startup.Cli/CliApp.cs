@@ -7,9 +7,11 @@
 namespace Pentagon.Extensions.Startup.Cli
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.CommandLine;
     using System.CommandLine.Invocation;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
@@ -21,38 +23,49 @@ namespace Pentagon.Extensions.Startup.Cli
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
+    using Threading;
 
     public class CliApp : AppCore
     {
         /// <inheritdoc />
-        protected override void BuildApp([NotNull] IApplicationBuilder appBuilder, string[] args)
+        protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
         {
-            if (appBuilder == null)
-                throw new ArgumentNullException(nameof(appBuilder));
-
             appBuilder.AddCliCommands();
         }
 
-        public virtual void OnExit(bool success)
+        /// <inheritdoc />
+        protected override void OnPostConfigureServices()
+        {
+            Debug.Assert(Environment != null, nameof(Environment) + " != null");
+            Debug.Assert(Environment.ApplicationName != null, "Environment.ApplicationName != null");
+
+            Console.Title = Environment.ApplicationName;
+        }
+
+        public virtual void OnExit(int statusCode)
         {
             Console.WriteLine();
             Console.WriteLine();
-            if (Environment.IsDevelopment())
-            {
-                if (!success)
-                {
-                    ConsoleWriter.WriteError(errorValue: "Program execution failed.");
-                    Console.WriteLine();
-                }
 
-                Console.WriteLine(value: " Press any key to exit the application...");
-                Console.ReadKey();
-            }
-            else if (!Environment.IsDevelopment() && !success)
+            if (!statusCode.IsAnyEqual(StatusCodes.Success, StatusCodes.Cancel))
             {
                 ConsoleWriter.WriteError(errorValue: "Program execution failed.");
                 Console.WriteLine();
             }
+
+            if (statusCode == StatusCodes.Cancel)
+            {
+                ConsoleWriter.WriteError(errorValue: "Program canceled.");
+                Console.WriteLine();
+            }
+
+#if !DEBUG
+            if (Environment.IsDevelopment())
+            {
+                Console.WriteLine(value: " Press any key to exit the application...");
+                Console.ReadKey();
+            }
+#endif
         }
 
         public void UpdateOptions<TOptions>([CanBeNull] Action<TOptions> updateCallback)
@@ -75,20 +88,33 @@ namespace Pentagon.Extensions.Startup.Cli
 
         public async Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
         {
-            if (_parallelCallbacks.Count == 0)
-                return await ExecuteCliCoreAsync(args, cancellationToken).ConfigureAwait(false);
+            if (!cancellationToken.CanBeCanceled)
+            {
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, Services.GetService<IProgramCancellationSource>().Token).Token;
+            }
 
-            var core = ExecuteCliCoreAsync(args, cancellationToken);
-            var callbacks = _parallelCallbacks.Select(a => a());
+            try
+            {
+                if (_parallelCallbacks.Count == 0)
+                    return await ExecuteCliCoreAsync(args).ConfigureAwait(false);
 
-            await Task.WhenAny(new [] {core}.Concat(callbacks)).ConfigureAwait(false);
+                var core = ExecuteCliCoreAsync(args);
 
-            var result = core.Result;
+                var callbacks = _parallelCallbacks.Select(a => a(cancellationToken));
 
-            return result;
+                await Task.WhenAny(new[] { core }.Concat(callbacks));
+
+                var result = core.Result;
+
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                return StatusCodes.Cancel;
+            }
         }
 
-        public async Task<int> ExecuteCliCoreAsync(string[] args, CancellationToken cancellationToken = default)
+        public async Task<int> ExecuteCliCoreAsync(string[] args)
         {
             if (Services == null)
             {
@@ -110,9 +136,17 @@ namespace Pentagon.Extensions.Startup.Cli
             {
                 var logger = DICore.App?.Services?.GetService<ILogger>();
 
-                logger?.LogDebug(e,"Command was cancelled.");
+                logger?.LogDebug(e, "Command was cancelled.");
 
                 return StatusCodes.Cancel;
+            }
+            catch (Exception e)
+            {
+                var logger = DICore.App?.Services?.GetService<ILogger>();
+
+                logger?.LogError(e, "Command execution failed.");
+
+                return StatusCodes.Error;
             }
         }
 
@@ -128,46 +162,71 @@ namespace Pentagon.Extensions.Startup.Cli
             RootCommand = root;
         }
 
-        public async Task TerminateAsync(int code)
+        /// <inheritdoc />
+        protected override void OnUnobservedTaskException(object sender, [NotNull] UnobservedTaskExceptionEventArgs args)
         {
-            // waiting for logging to finish writing data
-            await Task.Delay(500).ConfigureAwait(false);
+            base.OnUnobservedTaskException(sender, args);
 
-            OnExit(code.IsAnyEqual(StatusCodes.Success, StatusCodes.Cancel));
+            args.Exception?.Handle(a =>
+                      {
+                          if (a is OperationCanceledException)
+                          {
+                              var statusCode = StatusCodes.Cancel;
 
-            System.Environment.Exit(code);
+                              OnExit(statusCode);
+
+                              return true;
+                          }
+                          else
+                          {
+                              var statusCode = StatusCodes.Error;
+
+                              OnExit(statusCode);
+
+                              System.Environment.FailFast("Unobserved exception", a);
+                          }
+
+                          return false;
+                      });
         }
 
         /// <inheritdoc />
         protected override void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
         {
+            base.OnAppDomainUnhandledException(sender, args);
+
             if (args.ExceptionObject is OperationCanceledException)
             {
-                ConsoleWriter.WriteError("Program cancelled.");
+                var statusCode = StatusCodes.Cancel;
 
-                TerminateAsync(StatusCodes.Cancel).GetAwaiter().GetResult();
-
-                return;
+                OnExit(statusCode);
             }
-
-            if (args.ExceptionObject is AggregateException ag)
+            else if (args.ExceptionObject is AggregateException ag)
             {
                 ag.Handle(a =>
                           {
                               if (a is OperationCanceledException)
                               {
-                                  ConsoleWriter.WriteError("Program cancelled.");
+                                  var statusCode = StatusCodes.Cancel;
 
-                                  TerminateAsync(StatusCodes.Cancel).GetAwaiter().GetResult();
+                                  OnExit(statusCode);
 
                                   return true;
                               }
 
+                              System.Environment.FailFast("Unobserved exception", a);
+
                               return false;
                           });
             }
+            else
+            {
+                var statusCode = StatusCodes.Error;
 
-            base.OnAppDomainUnhandledException(sender, args);
+                OnExit(statusCode);
+
+                System.Environment.FailFast("Unobserved exception", args.ExceptionObject as Exception);
+            }
         }
 
         public RootCommand RootCommand { get; private set; }
@@ -181,14 +240,46 @@ namespace Pentagon.Extensions.Startup.Cli
 
         [NotNull]
         [ItemNotNull]
-        List<Func<Task<int>>> _parallelCallbacks = new List<Func<Task<int>>>();
+        List<Func<CancellationToken,Task<int>>> _parallelCallbacks = new List<Func<CancellationToken, Task<int>>>();
+
+        public void RegisterParallelCallback([NotNull] Func<CancellationToken,Task<int>> callback)
+        {
+            if (callback == null)
+                throw new ArgumentNullException(nameof(callback));
+
+            _parallelCallbacks.Add((ct) => Task.Run(() => callback(ct), ct));
+        }
 
         public void RegisterParallelCallback([NotNull] Func<Task<int>> callback)
         {
             if (callback == null)
                 throw new ArgumentNullException(nameof(callback));
 
-            _parallelCallbacks.Add(callback);
+            _parallelCallbacks.Add((ct) => Task.Run(callback, ct));
+        }
+
+        public void RegisterParallelCallback([NotNull] Func<CancellationToken, Task> callback)
+        {
+            if (callback == null)
+                throw new ArgumentNullException(nameof(callback));
+
+            _parallelCallbacks.Add(async (ct) =>
+                                   {
+                                       await Task.Run(() => callback(ct), ct);
+                                       return StatusCodes.Success;
+                                   });
+        }
+
+        public void RegisterParallelCallback([NotNull] Func<Task> callback)
+        {
+            if (callback == null)
+                throw new ArgumentNullException(nameof(callback));
+
+            _parallelCallbacks.Add( async(ct) =>
+                                   {
+                                       await Task.Run(callback, ct);
+                                       return StatusCodes.Success;
+                                   });
         }
 
         public void RegisterCancelKeyHandler([NotNull] Func<ConsoleKeyInfo, bool> predicate)
@@ -196,26 +287,33 @@ namespace Pentagon.Extensions.Startup.Cli
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            RegisterParallelCallback(() =>
+            RegisterParallelCallback(async () =>
                                      {
                                          var source = Services.GetService<IProgramCancellationSource>();
 
                                          if (source == null)
                                          {
                                              DICore.Logger?.LogError("Cancel key handler cannot execute: {TypeName} is not registered.", nameof(IProgramCancellationSource));
-                                             return Task.FromResult(1);
+                                             return (1);
                                          }
 
                                          do
                                          {
-                                             var read = Console.ReadKey(true);
+                                             ConsoleKeyInfo read;
+
+                                             if (Console.KeyAvailable)
+                                             {
+                                                 read = Console.ReadKey(true);
+                                             }
 
                                              if (predicate(read))
                                              {
                                                  source.Cancel();
                                                  DICore.Logger?.LogInformation("Cancel key handler: cancel requested.");
-                                                 return Task.FromResult(2);
+                                                 return (2);
                                              }
+
+                                             await Task.Delay(100);
                                          } while (true);
                                      });
         }

@@ -1,5 +1,7 @@
 ﻿namespace Pentagon.Extensions.Startup.CLI.TestApp {
+    using System.Threading;
     using Cli;
+    using Logging.ColoredConsole;
     using Microsoft.Extensions.DependencyInjection;
 
     class App : CliApp
@@ -20,6 +22,8 @@
                                                      if (cli.Lol != null)
                                                          original.Lol = cli.Lol;
                                                  });
+
+            appBuilder.AddLogging(a => a.AddColoredConsole());
         }
     }
 }
