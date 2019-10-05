@@ -33,39 +33,45 @@ namespace Pentagon.Extensions.Startup.Cli
             appBuilder.AddCliCommands();
         }
 
+        bool IsConsole => System.Environment.UserInteractive;
+
         /// <inheritdoc />
         protected override void OnPostConfigureServices()
         {
             Debug.Assert(Environment != null, nameof(Environment) + " != null");
             Debug.Assert(Environment.ApplicationName != null, "Environment.ApplicationName != null");
 
-            Console.Title = Environment.ApplicationName;
+            if (IsConsole)
+                Console.Title = Environment.ApplicationName;
         }
 
         public virtual void OnExit(int statusCode)
         {
-            Console.WriteLine();
-            Console.WriteLine();
-
-            if (!statusCode.IsAnyEqual(StatusCodes.Success, StatusCodes.Cancel))
+            if (IsConsole)
             {
-                ConsoleWriter.WriteError(errorValue: "Program execution failed.");
                 Console.WriteLine();
-            }
+                Console.WriteLine();
 
-            if (statusCode == StatusCodes.Cancel)
-            {
-                ConsoleWriter.WriteError(errorValue: "Program canceled.");
-                Console.WriteLine();
-            }
+                if (!statusCode.IsAnyEqual(StatusCodes.Success, StatusCodes.Cancel))
+                {
+                    ConsoleWriter.WriteError(errorValue: "Program execution failed.");
+                    Console.WriteLine();
+                }
+
+                if (statusCode == StatusCodes.Cancel)
+                {
+                    ConsoleWriter.WriteError(errorValue: "Program canceled.");
+                    Console.WriteLine();
+                }
 
 #if !DEBUG
-            if (Environment.IsDevelopment())
-            {
-                Console.WriteLine(value: " Press any key to exit the application...");
-                Console.ReadKey();
-            }
+                if (Environment.IsDevelopment())
+                {
+                    Console.WriteLine(value: " Press any key to exit the application...");
+                    Console.ReadKey();
+                }
 #endif
+            }
         }
 
         public void UpdateOptions<TOptions>([CanBeNull] Action<TOptions> updateCallback)
@@ -240,9 +246,9 @@ namespace Pentagon.Extensions.Startup.Cli
 
         [NotNull]
         [ItemNotNull]
-        List<Func<CancellationToken,Task<int>>> _parallelCallbacks = new List<Func<CancellationToken, Task<int>>>();
+        List<Func<CancellationToken, Task<int>>> _parallelCallbacks = new List<Func<CancellationToken, Task<int>>>();
 
-        public void RegisterParallelCallback([NotNull] Func<CancellationToken,Task<int>> callback)
+        public void RegisterParallelCallback([NotNull] Func<CancellationToken, Task<int>> callback)
         {
             if (callback == null)
                 throw new ArgumentNullException(nameof(callback));
@@ -275,11 +281,11 @@ namespace Pentagon.Extensions.Startup.Cli
             if (callback == null)
                 throw new ArgumentNullException(nameof(callback));
 
-            _parallelCallbacks.Add( async(ct) =>
-                                   {
-                                       await Task.Run(callback, ct);
-                                       return StatusCodes.Success;
-                                   });
+            _parallelCallbacks.Add(async (ct) =>
+                                  {
+                                      await Task.Run(callback, ct);
+                                      return StatusCodes.Success;
+                                  });
         }
 
         public void RegisterCancelKeyHandler([NotNull] Func<ConsoleKeyInfo, bool> predicate)
@@ -290,6 +296,12 @@ namespace Pentagon.Extensions.Startup.Cli
             RegisterParallelCallback(async () =>
                                      {
                                          var source = Services.GetService<IProgramCancellationSource>();
+
+                                         if (!IsConsole)
+                                         {
+                                             DICore.Logger?.LogDebug("Cancel key handler cannot execute: console handle is not present.");
+                                             return 0;
+                                         }
 
                                          if (source == null)
                                          {

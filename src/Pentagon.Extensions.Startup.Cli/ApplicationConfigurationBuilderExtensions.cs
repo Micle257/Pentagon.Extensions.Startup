@@ -10,6 +10,7 @@ namespace Pentagon.Extensions.Startup.Cli
     using System.Linq;
     using System.Reflection;
     using System.Threading;
+    using Helpers;
     using JetBrains.Annotations;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -37,11 +38,10 @@ namespace Pentagon.Extensions.Startup.Cli
             builder.AddProgramCancellationSource();
 
             var commands = AppDomain.CurrentDomain
-                                    .GetAssemblies()
-                                    .SelectMany(a => a.GetTypes())
+                                    .GetLoadedTypes()
                                     .Where(a => !a.IsAbstract)
                                     .Where(a => a.GetInterfaces().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(ICliHandler<>)));
-
+                
             foreach (var typeInfo in commands)
             {
                 var optionType = typeInfo.GetInterfaces()
