@@ -78,6 +78,9 @@ namespace Pentagon.Extensions.Startup
                 where TOptions : class;
 
         [NotNull]
+        IApplicationBuilder ConfigureServices([NotNull] Action<IServiceCollection> callback);
+
+        [NotNull]
         ApplicationBuilderResult Build();
     }
 }

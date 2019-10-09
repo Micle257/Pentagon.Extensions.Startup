@@ -7,6 +7,7 @@
 namespace Pentagon.Extensions.Startup
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
@@ -38,7 +39,7 @@ namespace Pentagon.Extensions.Startup
                             .Build();
         }
 
-        public ILogger BuildLog { get; set; } 
+        public ILogger BuildLog { get; set; }
 
         /// <inheritdoc />
         public IServiceCollection Services { get; } = new ServiceCollection();
@@ -74,11 +75,11 @@ namespace Pentagon.Extensions.Startup
             var ass = Assembly.GetEntryAssembly().GetName().Name;
 
             Environment = new ApplicationEnvironment
-                          {
-                                  EnvironmentName = environment,
-                                  ApplicationName = ass,
-                                  ContentRootPath = Directory.GetCurrentDirectory()
-                          };
+            {
+                EnvironmentName = environment,
+                ApplicationName = ass,
+                ContentRootPath = Directory.GetCurrentDirectory()
+            };
 
             return this;
         }
@@ -98,11 +99,11 @@ namespace Pentagon.Extensions.Startup
             var ass = Assembly.GetEntryAssembly().GetName().Name;
 
             Environment = new ApplicationEnvironment
-                          {
-                                  EnvironmentName = env,
-                                  ApplicationName = ass,
-                                  ContentRootPath = Directory.GetCurrentDirectory()
-                          };
+            {
+                EnvironmentName = env,
+                ApplicationName = ass,
+                ContentRootPath = Directory.GetCurrentDirectory()
+            };
 
             return this;
         }
@@ -236,6 +237,17 @@ namespace Pentagon.Extensions.Startup
                 where TOptions : class
         {
             Services.Configure<TOptions>(Configuration.GetSection(sectionName));
+
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IApplicationBuilder ConfigureServices(Action<IServiceCollection> callback)
+        {
+            if (callback == null)
+                throw new ArgumentNullException(nameof(callback));
+
+            callback(Services);
 
             return this;
         }
