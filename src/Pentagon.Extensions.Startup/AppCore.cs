@@ -153,7 +153,7 @@ namespace Pentagon.Extensions.Startup
             Services.GetService<ILogger>()?.LogError(args.Exception, "Exception unhandled (TaskScheduler).");
         }
 
-        void ConfigureUnhandledExceptionHandling()
+        protected virtual void ConfigureUnhandledExceptionHandling()
         {
             AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
             TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;

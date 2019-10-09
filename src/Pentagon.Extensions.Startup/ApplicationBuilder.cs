@@ -232,6 +232,15 @@ namespace Pentagon.Extensions.Startup
         }
 
         /// <inheritdoc />
+        public IApplicationBuilder AddOptions<TOptions>(string sectionName)
+                where TOptions : class
+        {
+            Services.Configure<TOptions>(Configuration.GetSection(sectionName));
+
+            return this;
+        }
+
+        /// <inheritdoc />
         public ApplicationBuilderResult Build()
         {
             if (Environment == null)

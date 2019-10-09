@@ -74,6 +74,10 @@ namespace Pentagon.Extensions.Startup
         IApplicationBuilder AddDefaultLogger(string name);
 
         [NotNull]
+        IApplicationBuilder AddOptions<TOptions>([CanBeNull] string sectionName)
+                where TOptions : class;
+
+        [NotNull]
         ApplicationBuilderResult Build();
     }
 }
