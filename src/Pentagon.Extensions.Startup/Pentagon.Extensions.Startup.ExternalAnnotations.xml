@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<assembly name="Pentagon.Extensions.Startup">
+  <member name="M:Pentagon.Extensions.Startup.AppCore.BuildApp(Pentagon.Extensions.Startup.IApplicationBuilder,System.String[])">
+    <parameter name="appBuilder">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+    <parameter name="args">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="P:Pentagon.Extensions.Startup.AppCore.Configuration">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.AppCore.New``1(``0,System.String[])">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="app">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.ApplicationBuilder.AddCommandLineArguments(System.String[],System.String)">
+    <parameter name="args">
+      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.ApplicationBuilder.AddConfiguration(System.Action{Microsoft.Extensions.Configuration.IConfigurationBuilder})">
+    <parameter name="configure">
+      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddCommandLineArguments(System.String[],System.String)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="args">
+      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddConfiguration(System.Action{Microsoft.Extensions.Configuration.IConfigurationBuilder})">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="configure">
+      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddDefaultLogger(System.String)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddEnvironment(System.String)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddEnvironmentFromEnvironmentVariable(System.String)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddEnvironmentVariables">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddJsonFileConfiguration(System.Boolean,System.String,Microsoft.Extensions.FileProviders.IFileProvider)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddLogging">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddLogging(Microsoft.Extensions.Configuration.IConfiguration)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddLogging(Microsoft.Extensions.Configuration.IConfiguration,System.Action{Microsoft.Extensions.Logging.ILoggingBuilder})">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddLogging(System.Action{Microsoft.Extensions.Logging.ILoggingBuilder})">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddOptions``1(System.String)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="sectionName">
+      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddVersion(System.Reflection.Assembly)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AttachInnerLogger(Microsoft.Extensions.Logging.ILogger)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.Build">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="P:Pentagon.Extensions.Startup.IApplicationBuilder.Configuration">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.ConfigureServices(System.Action{Microsoft.Extensions.DependencyInjection.IServiceCollection})">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="callback">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="P:Pentagon.Extensions.Startup.IApplicationBuilder.Services">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+</assembly>

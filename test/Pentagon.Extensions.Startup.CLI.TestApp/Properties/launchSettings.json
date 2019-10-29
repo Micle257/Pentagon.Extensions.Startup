@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Dev": {
+      "commandName": "Project",
+      "commandLineArgs": "first -t lol kol"
+    }
+  }
+}
