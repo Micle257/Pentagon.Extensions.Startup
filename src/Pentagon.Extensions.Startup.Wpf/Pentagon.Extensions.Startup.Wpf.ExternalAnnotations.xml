@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<assembly name="Pentagon.Extensions.Startup.Wpf">
+  <member name="M:Pentagon.Extensions.Startup.Wpf.WpfApp.RegisterUnhandledExceptionHandling(System.Windows.Application)">
+    <parameter name="wpfApplication">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+</assembly>
