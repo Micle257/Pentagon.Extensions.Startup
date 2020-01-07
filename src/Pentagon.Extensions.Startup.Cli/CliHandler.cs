@@ -12,6 +12,7 @@
     using JetBrains.Annotations;
     using Logging;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
     public abstract class CliHandler<TOptions> : ICliHandler<TOptions>
@@ -20,9 +21,9 @@
 
         protected CliHandler()
         {
-            var s = DICore.Get<IProgramCancellationSource>();
+            var s = DICore.Get<IHostApplicationLifetime>();
 
-            _cancellationToken = s?.Token ?? CancellationToken.None;
+            _cancellationToken = s?.ApplicationStopping ?? CancellationToken.None;
         }
 
         /// <inheritdoc />

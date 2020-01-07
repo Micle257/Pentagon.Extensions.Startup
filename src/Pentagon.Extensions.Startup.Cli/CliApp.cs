@@ -20,30 +20,80 @@ namespace Pentagon.Extensions.Startup.Cli
     using Console;
     using JetBrains.Annotations;
     using Logging;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Threading;
 
-    public class CliApp : AppCore
+    public class CliApp : ICliHostedService
     {
-        /// <inheritdoc />
-        protected override void BuildApp(IApplicationBuilder appBuilder, string[] args)
+        readonly ILogger<CliApp> _logger;
+
+        [NotNull]
+        readonly IApplicationArguments _arguments;
+
+        [NotNull]
+        readonly IApplicationEnvironment _environment;
+
+        [NotNull]
+        readonly IApplicationVersion _version;
+
+        [NotNull]
+        readonly IConfiguration _configuration;
+
+        [NotNull]
+        readonly IServiceScopeFactory _serviceScopeFactory;
+
+        [NotNull]
+        readonly IHostApplicationLifetime _applicationLifetime;
+
+        public CliApp(ILogger<CliApp> logger,
+                [NotNull] IApplicationArguments arguments,
+                      [NotNull] IApplicationEnvironment environment,
+                      [NotNull] IApplicationVersion version,
+                      [NotNull] IConfiguration configuration,
+                      [NotNull] IServiceScopeFactory serviceScopeFactory,
+                      [NotNull] IHostApplicationLifetime applicationLifetime)
         {
-            appBuilder.AddCliCommands();
+            _logger = logger;
+            _arguments = arguments;
+            _environment = environment;
+            _version = version;
+            _configuration = configuration;
+            _serviceScopeFactory = serviceScopeFactory;
+            _applicationLifetime = applicationLifetime;
+            _scope = serviceScopeFactory.CreateScope();
+        }
+
+        public int? ResultCode { get; private set; }
+
+        /// <inheritdoc />
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (IsConsole && string.IsNullOrWhiteSpace(_environment.ApplicationName))
+                    Console.Title = _environment.ApplicationName;
+
+                var resultCode = await ExecuteCliCoreAsync(_arguments.Arguments).ConfigureAwait(false);
+
+                ResultCode = resultCode;
+            }
+            catch (OperationCanceledException)
+            {
+                ResultCode = StatusCodes.Cancel;
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            OnExit(ResultCode.GetValueOrDefault());
         }
 
         bool IsConsole => System.Environment.UserInteractive;
-
-        /// <inheritdoc />
-        protected override void OnPostConfigureServices()
-        {
-            Debug.Assert(Environment != null, nameof(Environment) + " != null");
-            Debug.Assert(Environment.ApplicationName != null, "Environment.ApplicationName != null");
-
-            if (IsConsole)
-                Console.Title = Environment.ApplicationName;
-        }
 
         public virtual void OnExit(int statusCode)
         {
@@ -81,7 +131,7 @@ namespace Pentagon.Extensions.Startup.Cli
 
         public void UpdateOptions<TOptions>(string name, [CanBeNull] Action<TOptions> updateCallback)
         {
-            var options = Services.GetServices<ICliOptionsSource<TOptions>>()
+            var options = _scope.ServiceProvider.GetServices<ICliOptionsSource<TOptions>>()
                                   .FirstOrDefault(a => a.Name == name);
 
             if (options == null)
@@ -92,41 +142,8 @@ namespace Pentagon.Extensions.Startup.Cli
             options.Reload();
         }
 
-        public async Task<int> ExecuteCliAsync(string[] args, CancellationToken cancellationToken = default)
-        {
-            if (!cancellationToken.CanBeCanceled)
-            {
-                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, Services.GetService<IProgramCancellationSource>().Token).Token;
-            }
-
-            try
-            {
-                if (_parallelCallbacks.Count == 0)
-                    return await ExecuteCliCoreAsync(args).ConfigureAwait(false);
-
-                var core = ExecuteCliCoreAsync(args);
-
-                var callbacks = _parallelCallbacks.Select(a => a(cancellationToken));
-
-                await Task.WhenAny(new[] { core }.Concat(callbacks));
-
-                var result = core.Result;
-
-                return result;
-            }
-            catch (OperationCanceledException)
-            {
-                return StatusCodes.Cancel;
-            }
-        }
-
         public async Task<int> ExecuteCliCoreAsync(string[] args)
         {
-            if (Services == null)
-            {
-                throw new ArgumentNullException($"{nameof(Services)}", $"The App is not properly built: cannot execute app.");
-            }
-
             if (RootCommand == null)
             {
                 RootCommand = CommandHelper.GetRootCommand();
@@ -169,9 +186,9 @@ namespace Pentagon.Extensions.Startup.Cli
         }
 
         /// <inheritdoc />
-        protected override void OnUnobservedTaskException(object sender, [NotNull] UnobservedTaskExceptionEventArgs args)
+        protected void OnUnobservedTaskException(object sender, [NotNull] UnobservedTaskExceptionEventArgs args)
         {
-            base.OnUnobservedTaskException(sender, args);
+            _logger.LogError(exception: args.Exception, message: "Exception unhandled (TaskScheduler).");
 
             args.Exception?.Handle(a =>
                       {
@@ -197,9 +214,10 @@ namespace Pentagon.Extensions.Startup.Cli
         }
 
         /// <inheritdoc />
-        protected override void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
+        protected void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs args)
         {
-            base.OnAppDomainUnhandledException(sender, args);
+            _logger.LogError(args.ExceptionObject as Exception,
+                                                     message: "Exception unhandled (AppDomain).");
 
             if (args.ExceptionObject is OperationCanceledException)
             {
@@ -237,97 +255,6 @@ namespace Pentagon.Extensions.Startup.Cli
 
         public RootCommand RootCommand { get; private set; }
 
-        public static Task RunAsync(string[] args)
-        {
-            var app = new CliApp();
-
-            return app.ExecuteCliAsync(args);
-        }
-
-        [NotNull]
-        [ItemNotNull]
-        List<Func<CancellationToken, Task<int>>> _parallelCallbacks = new List<Func<CancellationToken, Task<int>>>();
-
-        public void RegisterParallelCallback([NotNull] Func<CancellationToken, Task<int>> callback)
-        {
-            if (callback == null)
-                throw new ArgumentNullException(nameof(callback));
-
-            _parallelCallbacks.Add((ct) => Task.Run(() => callback(ct), ct));
-        }
-
-        public void RegisterParallelCallback([NotNull] Func<Task<int>> callback)
-        {
-            if (callback == null)
-                throw new ArgumentNullException(nameof(callback));
-
-            _parallelCallbacks.Add((ct) => Task.Run(callback, ct));
-        }
-
-        public void RegisterParallelCallback([NotNull] Func<CancellationToken, Task> callback)
-        {
-            if (callback == null)
-                throw new ArgumentNullException(nameof(callback));
-
-            _parallelCallbacks.Add(async (ct) =>
-                                   {
-                                       await Task.Run(() => callback(ct), ct);
-                                       return StatusCodes.Success;
-                                   });
-        }
-
-        public void RegisterParallelCallback([NotNull] Func<Task> callback)
-        {
-            if (callback == null)
-                throw new ArgumentNullException(nameof(callback));
-
-            _parallelCallbacks.Add(async (ct) =>
-                                  {
-                                      await Task.Run(callback, ct);
-                                      return StatusCodes.Success;
-                                  });
-        }
-
-        public void RegisterCancelKeyHandler([NotNull] Func<ConsoleKeyInfo, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            RegisterParallelCallback(async () =>
-                                     {
-                                         var source = Services.GetService<IProgramCancellationSource>();
-
-                                         if (!IsConsole)
-                                         {
-                                             DICore.Logger?.LogDebug("Cancel key handler cannot execute: console handle is not present.");
-                                             return 0;
-                                         }
-
-                                         if (source == null)
-                                         {
-                                             DICore.Logger?.LogError("Cancel key handler cannot execute: {TypeName} is not registered.", nameof(IProgramCancellationSource));
-                                             return (1);
-                                         }
-
-                                         do
-                                         {
-                                             ConsoleKeyInfo read;
-
-                                             if (Console.KeyAvailable)
-                                             {
-                                                 read = Console.ReadKey(true);
-                                             }
-
-                                             if (predicate(read))
-                                             {
-                                                 source.Cancel();
-                                                 DICore.Logger?.LogInformation("Cancel key handler: cancel requested.");
-                                                 return (2);
-                                             }
-
-                                             await Task.Delay(100);
-                                         } while (true);
-                                     });
-        }
+        IServiceScope _scope;
     }
 }

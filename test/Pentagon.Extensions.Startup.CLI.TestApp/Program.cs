@@ -13,6 +13,8 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
     using System.Threading.Tasks;
     using Cli;
     using Console;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
     using Threading;
     using Console = System.Console;
 
@@ -32,42 +34,47 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
             }
         }
 
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+                Host.CreateDefaultBuilder(args: args)
+                    .UseCliApp(args, b => b.RegisterParallelCallback(token => Task.FromResult(1)))
+                    .UseConsoleProgramCancellation(info => info.Key == ConsoleKey.B);
+
         static async Task<int> Run(string[] args)
         {
-            App = AppCore.New(new App(), args);
+            var host = CreateHostBuilder(args).Build();
+            
+            var cliapp = host.Services.GetRequiredService<ICliHostedService>();
 
-            App.RegisterCancelKeyHandler(info => info.Key == ConsoleKey.B);
+            cliapp.RegisterCancelKeyHandler(info => info.Key == ConsoleKey.B);
 
-            App.RegisterParallelCallback(async (ct) =>
-                                         {
-                                             while (!ct.IsCancellationRequested)
-                                             {
-                                                 try
-                                                 {
-                                                     using (var client = new WebClient())
-                                                     {
-                                                         using (await client.OpenReadTaskAsync("http://clients3.google.com/generate_204").TimeoutAfter(TimeSpan.FromSeconds(1)))
-                                                         {
-                                                             ConsoleWriter.WriteSuccess("Internet available.");
-                                                             Console.WriteLine();
-                                                         }
-                                                     }
-                                                 }
-                                                 catch
-                                                 {
-                                                     ConsoleWriter.WriteError("Internet don't.");
-                                                     Console.WriteLine();
-                                                 }
+            cliapp.RegisterParallelCallback(async (ct) =>
+                                            {
+                                                while (!ct.IsCancellationRequested)
+                                                {
+                                                    try
+                                                    {
+                                                        using (var client = new WebClient())
+                                                        {
+                                                            using (await client.OpenReadTaskAsync("http://clients3.google.com/generate_204").TimeoutAfter(TimeSpan.FromSeconds(1)))
+                                                            {
+                                                                ConsoleWriter.WriteSuccess("Internet available.");
+                                                                Console.WriteLine();
+                                                            }
+                                                        }
+                                                    }
+                                                    catch
+                                                    {
+                                                        ConsoleWriter.WriteError("Internet don't.");
+                                                        Console.WriteLine();
+                                                    }
 
-                                                 Thread.Sleep(500);
-                                             }
-                                         });
+                                                    Thread.Sleep(500);
+                                                }
+                                            });
 
-            var res = await App.ExecuteCliAsync(args);
+            await host.RunAsync().ConfigureAwait(false);
 
-            App.OnExit(res);
-
-            return res;
+            return cliapp.ResultCode.GetValueOrDefault();
         }
     }
 }

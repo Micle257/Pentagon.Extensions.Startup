@@ -15,27 +15,14 @@ namespace Pentagon.Extensions.Startup.Cli
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Options;
-            
+
     public static class ApplicationConfigurationBuilderExtensions
     {
-        public static IApplicationBuilder AddProgramCancellationSource([NotNull] this IApplicationBuilder builder, CancellationTokenSource tokenSource = null)
-        {
-            if (builder == null)
-                throw new ArgumentNullException(nameof(builder));
-
-            // ensure that is used latest implementation
-            builder.Services.Replace(ServiceDescriptor.Singleton<IProgramCancellationSource>(new ProgramCancellationSource(tokenSource)));
-
-            return builder;
-        }
-
+        [NotNull]
         public static IApplicationBuilder AddCliCommands([NotNull] this IApplicationBuilder builder, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
-
-            // ensure registered cancellation
-            builder.AddProgramCancellationSource();
 
             var commands = AppDomain.CurrentDomain
                                     .GetLoadedTypes()
@@ -55,6 +42,7 @@ namespace Pentagon.Extensions.Startup.Cli
             return builder;
         }
 
+        [NotNull]
         public static IApplicationBuilder AddCliOptions<TOptions>([NotNull] this IApplicationBuilder builder, [CanBeNull] string name, CliOptionsDelegate<TOptions> configure = null)
                 where TOptions : class, new()
         {
@@ -87,6 +75,7 @@ namespace Pentagon.Extensions.Startup.Cli
             return builder;
         }
 
+        [NotNull]
         public static IApplicationBuilder AddCliOptions<TOptions>([NotNull] this IApplicationBuilder builder, CliOptionsDelegate<TOptions> configure = null)
                 where TOptions : class, new()
         {

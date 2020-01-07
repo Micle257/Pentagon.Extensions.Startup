@@ -14,8 +14,6 @@
 
         public static IApplicationVersion Version => Get<IApplicationVersion>();
 
-        public static AppCore App { get; set; }
-
         public static TService Get<TService>()
             where TService : class
         {

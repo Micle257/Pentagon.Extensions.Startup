@@ -15,6 +15,7 @@ namespace Pentagon.Extensions.Startup
     using Microsoft.Extensions.FileProviders;
     using Microsoft.Extensions.Logging;
 
+    // TODO to IStartupServiceCollection
     public interface IApplicationBuilder
     {
         [NotNull]
