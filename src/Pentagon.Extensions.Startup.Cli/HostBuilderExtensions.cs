@@ -7,59 +7,145 @@
 namespace Pentagon.Extensions.Startup.Cli
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Console.Cli;
     using JetBrains.Annotations;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
-    public interface ICliHostBuilder
+    public class CliHostProxy : IHost
     {
-        [NotNull]
-        ICliHost Build();
+        readonly IHost _host;
 
-        void RegisterParallelCallback([NotNull] Func<CancellationToken, Task<int>> callback);
+        public CliHostProxy(IHost host)
+        {
+            _host = host;
+        }
+
+        /// <inheritdoc />
+        public void Dispose() => _host.Dispose();
+
+        /// <inheritdoc />
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            var runner = Services.GetRequiredService<ICliHostedService>();
+            //var applicationLifetime = Services.GetRequiredService<IHostApplicationLifetime>();
+            //var hostLifetime = Services.GetRequiredService<IHostLifetime>();
+
+            //using var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, applicationLifetime.ApplicationStopping);
+            //var combinedCancellationToken = combinedCancellationTokenSource.Token;
+
+            // TODO delay
+            //await hostLifetime.WaitForStartAsync(combinedCancellationToken).ConfigureAwait(false);
+
+            //combinedCancellationToken.ThrowIfCancellationRequested();
+
+            await runner.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc />
+        public IServiceProvider Services => _host.Services;
     }
 
-    public interface ICliHost
+    public class CliHostBuilderProxy : IHostBuilder
     {
+        readonly IHostBuilder _hostBuilder;
 
+        public CliHostBuilderProxy(IHostBuilder hostBuilder)
+        {
+            _hostBuilder = hostBuilder;
+        }
+
+        /// <inheritdoc />
+        public IHostBuilder ConfigureHostConfiguration(Action<IConfigurationBuilder> configureDelegate)
+        {
+            _hostBuilder.ConfigureHostConfiguration(configureDelegate);
+
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IHostBuilder ConfigureAppConfiguration(Action<HostBuilderContext, IConfigurationBuilder> configureDelegate)
+        {
+            _hostBuilder.ConfigureAppConfiguration(configureDelegate);
+
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
+        {
+            _hostBuilder.ConfigureServices(configureDelegate);
+
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IHostBuilder UseServiceProviderFactory<TContainerBuilder>(IServiceProviderFactory<TContainerBuilder> factory)
+        {
+            _hostBuilder.UseServiceProviderFactory(factory);
+
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IHostBuilder UseServiceProviderFactory<TContainerBuilder>(Func<HostBuilderContext, IServiceProviderFactory<TContainerBuilder>> factory)
+        {
+            _hostBuilder.UseServiceProviderFactory(factory);
+
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IHostBuilder ConfigureContainer<TContainerBuilder>(Action<HostBuilderContext, TContainerBuilder> configureDelegate)
+        {
+            _hostBuilder.ConfigureContainer(configureDelegate);
+
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IHost Build()
+        {
+            var host = _hostBuilder.Build();
+
+            return new CliHostProxy(host);
+        }
+
+        /// <inheritdoc />
+        public IDictionary<object, object> Properties => _hostBuilder.Properties;
     }
 
     public static class HostBuilderExtensions
     {
         [NotNull]
-        public static IHostBuilder UseCliApp([NotNull] this IHostBuilder builder, string[] args, Action<ICliHostBuilder> configureCallback = null)
+        public static IHostBuilder UseCliApp([NotNull] this IHostBuilder builder, string[] args, Action<CliOptions> configure = null)
         {
             builder.ConfigureServices((context, collection) =>
                                       {
-                                          collection.AddCommandLineArguments(args);
-                                          collection.AddCliCommands();
-                                          collection.AddVersion();
+                                          collection.AddCommandLineArguments(args)
+                                                    .AddVersion();
 
-                                          collection.AddCliAppAsHostedService();
+                                          collection.AddCli(configure);
+
+                                          collection.AddCliAppHostedService();
+
+                                          collection.AddCliOptionsBase();
                                       });
 
-            return builder;
-        }
-
-        [NotNull]
-        public static IHostBuilder UseCliApp<T>([NotNull] this IHostBuilder builder, string[] args)
-                where T : class, ICliHostedService
-        {
-            builder.ConfigureServices((context, collection) =>
-                                      {
-                                          collection.AddCommandLineArguments(args);
-                                          collection.AddCliCommands();
-                                          collection.AddVersion();
-
-                                          collection.AddCliAppAsHostedService<T>();
-                                      });
-
-            return builder;
+            return new CliHostBuilderProxy(builder);
         }
 
         [NotNull]
@@ -83,15 +169,19 @@ namespace Pentagon.Extensions.Startup.Cli
 
     public class ConsoleProgramCancelHostedService : BackgroundService
     {
+        readonly ILogger<ConsoleProgramCancelHostedService> _logger;
+
         [NotNull]
         readonly IHostApplicationLifetime _applicationLifetime;
 
         [NotNull]
         ConsoleProgramCancellationOptions _options;
 
-        public ConsoleProgramCancelHostedService([NotNull] IHostApplicationLifetime applicationLifetime,
+        public ConsoleProgramCancelHostedService(ILogger<ConsoleProgramCancelHostedService> logger,
+                [NotNull] IHostApplicationLifetime applicationLifetime,
                                                  IOptions<ConsoleProgramCancellationOptions> options)
         {
+            _logger = logger;
             _applicationLifetime = applicationLifetime;
             _options = options?.Value ?? new ConsoleProgramCancellationOptions();
         }
@@ -101,13 +191,13 @@ namespace Pentagon.Extensions.Startup.Cli
         {
             if (_options.KeyPredicate == null)
             {
-                DICore.Logger?.LogDebug("Cancel key handler is null.");
+                _logger.LogDebug("Cancel key handler is null.");
                 return;
             }
 
             if (!Environment.UserInteractive)
             {
-                DICore.Logger?.LogDebug("Cancel key handler cannot execute: console handle is not present.");
+                _logger.LogDebug("Cancel key handler cannot execute: console handle is not present.");
                 return;
             }
 
@@ -123,7 +213,7 @@ namespace Pentagon.Extensions.Startup.Cli
                 if (_options.KeyPredicate(read))
                 {
                     _applicationLifetime.StopApplication();
-                    DICore.Logger?.LogInformation("Cancel key handler: cancel requested.");
+                    _logger.LogInformation("Cancel key handler: cancel requested.");
                 }
 
                 await Task.Delay(100, stoppingToken).ConfigureAwait(false);

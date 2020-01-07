@@ -1,87 +1,107 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <assembly name="Pentagon.Extensions.Startup.Cli">
-  <member name="M:Pentagon.Extensions.Startup.Cli.ApplicationConfigurationBuilderExtensions.AddCliCommands(Pentagon.Extensions.Startup.IApplicationBuilder,Microsoft.Extensions.DependencyInjection.ServiceLifetime)">
+  <member name="M:Pentagon.Extensions.Startup.Cli.CliHostedService.#ctor(Microsoft.Extensions.Logging.ILogger{Pentagon.Extensions.Startup.Cli.CliHostedService},Pentagon.Extensions.Startup.IApplicationArguments,Pentagon.Extensions.Console.Cli.ICliCommandRunner,Microsoft.Extensions.Hosting.IHostEnvironment,Microsoft.Extensions.Hosting.IHostApplicationLifetime,Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)">
+    <parameter name="arguments">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+    <parameter name="cliRunner">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+    <parameter name="environment">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+    <parameter name="lifetime">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+    <parameter name="serviceScopeFactory">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.CliHostedService.OnUnobservedTaskException(System.Object,System.Threading.Tasks.UnobservedTaskExceptionEventArgs)">
+    <parameter name="args">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.CliOptionsUpdateService.#ctor(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)">
+    <parameter name="serviceScopeFactory">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.CliOptionsUpdateService.UpdateOptions``1(System.Action{``0})">
+    <parameter name="updateCallback">
+      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.CliOptionsUpdateService.UpdateOptions``1(System.String,System.Action{``0})">
+    <parameter name="updateCallback">
+      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.ConsoleProgramCancelHostedService.#ctor(Microsoft.Extensions.Logging.ILogger{Pentagon.Extensions.Startup.Cli.ConsoleProgramCancelHostedService},Microsoft.Extensions.Hosting.IHostApplicationLifetime,Microsoft.Extensions.Options.IOptions{Pentagon.Extensions.Startup.Cli.ConsoleProgramCancellationOptions})">
+    <parameter name="applicationLifetime">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.HostBuilderExtensions.UseCliApp(Microsoft.Extensions.Hosting.IHostBuilder,System.String[],System.Action{Pentagon.Extensions.Console.Cli.CliOptions})">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     <parameter name="builder">
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
   </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.ApplicationConfigurationBuilderExtensions.AddCliOptions``1(Pentagon.Extensions.Startup.IApplicationBuilder,Pentagon.Extensions.Startup.Cli.CliOptionsDelegate{``0})">
+  <member name="M:Pentagon.Extensions.Startup.Cli.HostBuilderExtensions.UseConsoleProgramCancellation(Microsoft.Extensions.Hosting.IHostBuilder,System.Func{System.ConsoleKeyInfo,System.Boolean})">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     <parameter name="builder">
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
+    <parameter name="configure">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
   </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.ApplicationConfigurationBuilderExtensions.AddCliOptions``1(Pentagon.Extensions.Startup.IApplicationBuilder,System.String,Pentagon.Extensions.Startup.Cli.CliOptionsDelegate{``0})">
-    <parameter name="builder">
+  <member name="M:Pentagon.Extensions.Startup.Cli.HostExtensions.RunCliAsync(Microsoft.Extensions.Hosting.IHost,System.Threading.CancellationToken)">
+    <parameter name="host">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.ICliOptionsUpdateService.UpdateOptions``1(System.Action{``0})">
+    <parameter name="updateCallback">
+      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.ICliOptionsUpdateService.UpdateOptions``1(System.String,System.Action{``0})">
+    <parameter name="updateCallback">
+      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.ServiceCollectionExtensions.AddCliAppHostedService(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="services">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.ServiceCollectionExtensions.AddCliAppHostedService``1(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="services">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.ServiceCollectionExtensions.AddCliOptions``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,Pentagon.Extensions.Startup.Cli.CliOptionsDelegate{``0})">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="services">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.ServiceCollectionExtensions.AddCliOptions``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String,Pentagon.Extensions.Startup.Cli.CliOptionsDelegate{``0})">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="services">
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
     <parameter name="name">
       <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
     </parameter>
   </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.ApplicationConfigurationBuilderExtensions.AddProgramCancellationSource(Pentagon.Extensions.Startup.IApplicationBuilder,System.Threading.CancellationTokenSource)">
-    <parameter name="builder">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CliApp.OnUnobservedTaskException(System.Object,System.Threading.Tasks.UnobservedTaskExceptionEventArgs)">
-    <parameter name="args">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CliApp.RegisterCancelKeyHandler(System.Func{System.ConsoleKeyInfo,System.Boolean})">
-    <parameter name="predicate">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CliApp.RegisterParallelCallback(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{System.Int32}})">
-    <parameter name="callback">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CliApp.RegisterParallelCallback(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task})">
-    <parameter name="callback">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CliApp.RegisterParallelCallback(System.Func{System.Threading.Tasks.Task{System.Int32}})">
-    <parameter name="callback">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CliApp.RegisterParallelCallback(System.Func{System.Threading.Tasks.Task})">
-    <parameter name="callback">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CliApp.UpdateOptions``1(System.Action{``0})">
-    <parameter name="updateCallback">
-      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CliApp.UpdateOptions``1(System.String,System.Action{``0})">
-    <parameter name="updateCallback">
-      <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CliHandler`1.InvokeAsync(System.CommandLine.Invocation.InvocationContext)">
+  <member name="M:Pentagon.Extensions.Startup.Cli.ServiceCollectionExtensions.AddCliOptionsBase(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
     <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    <parameter name="context">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.CommandExtensions.AddHandler``1(System.CommandLine.Command)">
-    <parameter name="command">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.ICliHandler`1.RunAsync(`0,System.Threading.CancellationToken)">
-    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    <parameter name="options">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.ReflectionModelBinder`1.CreateInstance(System.CommandLine.Binding.BindingContext)">
-    <parameter name="bindingContext">
+    <parameter name="services">
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
   </member>

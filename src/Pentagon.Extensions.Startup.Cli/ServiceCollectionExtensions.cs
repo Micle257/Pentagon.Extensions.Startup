@@ -19,44 +19,30 @@ namespace Pentagon.Extensions.Startup.Cli
     public static class ServiceCollectionExtensions
     {
         [NotNull]
-        public static IServiceCollection AddCliAppAsHostedService([NotNull] this IServiceCollection services)
+        public static IServiceCollection AddCliAppHostedService([NotNull] this IServiceCollection services)
         {
-            services.AddHostedService<CliApp>();
-            services.AddSingleton<ICliHostedService>(c => c.GetRequiredService<CliApp>());
+            services.AddSingleton<ICliHostedService, CliHostedService>();
 
             return services;
         }
 
         [NotNull]
-        public static IServiceCollection AddCliAppAsHostedService<T>([NotNull] this IServiceCollection services)
+        public static IServiceCollection AddCliAppHostedService<T>([NotNull] this IServiceCollection services)
                 where T : class, ICliHostedService
         {
-            services.AddHostedService<T>();
-            services.AddSingleton<ICliHostedService>(c => c.GetRequiredService<T>());
+            services.AddSingleton<ICliHostedService, T>();
 
             return services;
         }
 
         [NotNull]
-        public static IServiceCollection AddCliCommands([NotNull] this IServiceCollection services, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
+        public static IServiceCollection AddCliOptionsBase([NotNull] this IServiceCollection services)
         {
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
 
-            var commands = AppDomain.CurrentDomain
-                                    .GetLoadedTypes()
-                                    .Where(a => !a.IsAbstract)
-                                    .Where(a => a.GetInterfaces().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(ICliHandler<>)));
-
-            foreach (var typeInfo in commands)
-            {
-                var optionType = typeInfo.GetInterfaces()
-                                         .FirstOrDefault(a => a.GetGenericTypeDefinition() == typeof(ICliHandler<>))?
-                                         .GenericTypeArguments?
-                                         .FirstOrDefault();
-
-                services.Add(new ServiceDescriptor(typeof(ICliHandler<>).MakeGenericType(optionType), implementationType: typeInfo, lifetime: serviceLifetime));
-            }
+            services.AddOptions()
+                    .TryAddSingleton<ICliOptionsUpdateService, CliOptionsUpdateService>();
 
             return services;
         }
@@ -72,7 +58,7 @@ namespace Pentagon.Extensions.Startup.Cli
 
             var tokenSource = new CliCommandChangeTokenSource<TOptions>(name: name);
 
-            services.AddOptions()
+            services.AddCliOptionsBase()
                    .AddSingleton<ICliOptionsSource<TOptions>>(tokenSource)
                    .AddSingleton<IOptionsChangeTokenSource<TOptions>>(tokenSource);
 

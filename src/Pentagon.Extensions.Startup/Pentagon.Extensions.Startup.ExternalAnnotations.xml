@@ -1,22 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <assembly name="Pentagon.Extensions.Startup">
-  <member name="M:Pentagon.Extensions.Startup.AppCore.BuildApp(Pentagon.Extensions.Startup.IApplicationBuilder,System.String[])">
-    <parameter name="appBuilder">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-    <parameter name="args">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
-  <member name="P:Pentagon.Extensions.Startup.AppCore.Configuration">
-    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-  </member>
-  <member name="M:Pentagon.Extensions.Startup.AppCore.New``1(``0,System.String[])">
-    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    <parameter name="app">
-      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
-    </parameter>
-  </member>
   <member name="M:Pentagon.Extensions.Startup.ApplicationBuilder.AddCommandLineArguments(System.String[],System.String)">
     <parameter name="args">
       <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
@@ -26,6 +9,9 @@
     <parameter name="configure">
       <attribute ctor="M:JetBrains.Annotations.CanBeNullAttribute.#ctor" />
     </parameter>
+  </member>
+  <member name="P:Pentagon.Extensions.Startup.IApplicationArguments.Arguments">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
   </member>
   <member name="M:Pentagon.Extensions.Startup.IApplicationBuilder.AddCommandLineArguments(System.String[],System.String)">
     <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
@@ -92,5 +78,17 @@
   </member>
   <member name="P:Pentagon.Extensions.Startup.IApplicationBuilder.Services">
     <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.StartupServiceCollectionExtensions.AddCommandLineArguments(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String[])">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="services">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.StartupServiceCollectionExtensions.AddVersion(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Reflection.Assembly)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="services">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
   </member>
 </assembly>

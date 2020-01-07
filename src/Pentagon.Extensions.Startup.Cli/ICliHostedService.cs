@@ -13,16 +13,10 @@ namespace Pentagon.Extensions.Startup.Cli
     using JetBrains.Annotations;
     using Microsoft.Extensions.Hosting;
 
-    public interface ICliHostedService : IHostedService
+    public interface ICliHostedService
     {
         int? ResultCode { get; }
 
-        RootCommand RootCommand { get; }
-
-        void UpdateOptions<TOptions>([CanBeNull] Action<TOptions> updateCallback);
-
-        void UpdateOptions<TOptions>(string name, [CanBeNull] Action<TOptions> updateCallback);
-
-        void ConfigureCli(Action<RootCommand> callback);
+        Task ExecuteAsync(CancellationToken cancellationToken);
     }
 }
