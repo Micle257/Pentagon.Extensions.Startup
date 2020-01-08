@@ -11,11 +11,6 @@ namespace Pentagon.Extensions.Startup.Cli {
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
 
-    public interface ICliOptionsUpdateService {
-        void UpdateOptions<TOptions>([CanBeNull] Action<TOptions> updateCallback);
-        void UpdateOptions<TOptions>(string name, [CanBeNull] Action<TOptions> updateCallback);
-    }
-
     public class CliOptionsUpdateService : ICliOptionsUpdateService
     {
         IServiceScope _scope;

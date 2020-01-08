@@ -23,23 +23,7 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
     {
         static Task<int> Main(string[] args)
         {
-            return CreateHostBuilder(args).Build().RunCliAsync();
+            return CliHostBuilder.GetDefault(args).Build().RunCliAsync();
         }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-                Host.CreateDefaultBuilder(args: args)
-                   //.UseConsoleProgramCancellation(info => info.Key == ConsoleKey.B)
-                  .UseCliApp(args)
-               //    .ConfigureServices((context,services) =>
-               //                       {
-               //                           services.Configure<LolOptions>(context.Configuration.GetSection("O"))
-               //                                   .Configure<LolOptions>("JSON", context.Configuration.GetSection("O"))
-               //                                   .AddCliOptions<LolOptions>((original, cli) =>
-               //                                                              {
-               //                                                                  if (cli.Lol != null)
-               //                                                                      original.Lol = cli.Lol;
-               //                                                              });
-               //                       })
-        ;
     }
 }

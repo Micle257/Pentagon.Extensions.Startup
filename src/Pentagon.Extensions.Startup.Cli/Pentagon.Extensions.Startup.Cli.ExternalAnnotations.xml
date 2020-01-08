@@ -57,7 +57,7 @@
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
   </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.HostExtensions.RunCliAsync(Microsoft.Extensions.Hosting.IHost,System.Threading.CancellationToken)">
+  <member name="M:Pentagon.Extensions.Startup.Cli.HostExtensions.RunCliAsync(Microsoft.Extensions.Hosting.IHost,System.Boolean,System.Threading.CancellationToken)">
     <parameter name="host">
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
