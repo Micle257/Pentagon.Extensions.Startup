@@ -18,21 +18,6 @@ namespace Pentagon.Extensions.Startup.Cli
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
-    public static class HostExtensions
-    {
-        public static async Task<int> RunCliAsync([NotNull] this IHost host, CancellationToken cancellationToken =default)
-        {
-            var app = host.Services.GetService<ICliHostedService>();
-
-            await host.RunAsync(cancellationToken).ConfigureAwait(false);
-
-            if (app == null)
-                return 0;
-
-            return app.ResultCode.GetValueOrDefault();
-        }
-    }
-
     public class CliHostedService : ICliHostedService
     {
         readonly ILogger<CliHostedService> _logger;
@@ -113,14 +98,6 @@ namespace Pentagon.Extensions.Startup.Cli
                     ConsoleWriter.WriteError(errorValue: "Program canceled.");
                     Console.WriteLine();
                 }
-
-#if !DEBUG
-                if (_environment.IsDevelopment())
-                {
-                    Console.WriteLine(value: " Press any key to exit the application...");
-                    Console.ReadKey();
-                }
-#endif
             }
         }
 
