@@ -12,7 +12,7 @@ namespace Pentagon.Extensions.Startup.Wpf
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
-    public abstract class WpfApp : AppCore
+    public abstract class WpfApp //: AppCore
     {
         public void RegisterUnhandledExceptionHandling([NotNull] Application wpfApplication)
         {
@@ -21,7 +21,7 @@ namespace Pentagon.Extensions.Startup.Wpf
 
         protected virtual void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs args)
         {
-            Services.GetService<ILogger>()?.LogError(exception: args.Exception, message: "Exception unhandled (Dispatcher).");
+          //  Services.GetService<ILogger>()?.LogError(exception: args.Exception, message: "Exception unhandled (Dispatcher).");
         }
     }
 }

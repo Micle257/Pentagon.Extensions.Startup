@@ -13,61 +13,33 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
     using System.Threading.Tasks;
     using Cli;
     using Console;
+    using Console.Cli;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
     using Threading;
     using Console = System.Console;
 
     class Program
     {
-        public static App App { get; private set; }
-
-        static async Task<int> Main(string[] args)
+        static Task<int> Main(string[] args)
         {
-            try
-            {
-                return await Run(args);
-            }
-            finally
-            {
-                await Task.Delay(1500);
-            }
+            return CreateHostBuilder(args).Build().RunCliAsync();
         }
 
-        static async Task<int> Run(string[] args)
-        {
-            App = AppCore.New(new App(), args);
-
-            App.RegisterCancelKeyHandler(info => info.Key == ConsoleKey.B);
-
-            App.RegisterParallelCallback(async (ct) =>
-                                         {
-                                             while (!ct.IsCancellationRequested)
-                                             {
-                                                 try
-                                                 {
-                                                     using (var client = new WebClient())
-                                                     {
-                                                         using (await client.OpenReadTaskAsync("http://clients3.google.com/generate_204").TimeoutAfter(TimeSpan.FromSeconds(1)))
-                                                         {
-                                                             ConsoleWriter.WriteSuccess("Internet available.");
-                                                             Console.WriteLine();
-                                                         }
-                                                     }
-                                                 }
-                                                 catch
-                                                 {
-                                                     ConsoleWriter.WriteError("Internet don't.");
-                                                     Console.WriteLine();
-                                                 }
-
-                                                 Thread.Sleep(500);
-                                             }
-                                         });
-
-            var res = await App.ExecuteCliAsync(args);
-
-            App.OnExit(res);
-
-            return res;
-        }
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+                Host.CreateDefaultBuilder(args: args)
+                   //.UseConsoleProgramCancellation(info => info.Key == ConsoleKey.B)
+                  .UseCliApp(args)
+               //    .ConfigureServices((context,services) =>
+               //                       {
+               //                           services.Configure<LolOptions>(context.Configuration.GetSection("O"))
+               //                                   .Configure<LolOptions>("JSON", context.Configuration.GetSection("O"))
+               //                                   .AddCliOptions<LolOptions>((original, cli) =>
+               //                                                              {
+               //                                                                  if (cli.Lol != null)
+               //                                                                      original.Lol = cli.Lol;
+               //                                                              });
+               //                       })
+        ;
     }
 }

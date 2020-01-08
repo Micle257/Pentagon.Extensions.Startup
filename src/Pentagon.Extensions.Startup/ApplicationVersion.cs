@@ -23,10 +23,7 @@ namespace Pentagon.Extensions.Startup
         /// <returns> The version, or null if assembly parameter is null and no entry assembly exists. </returns>
         public static ApplicationVersion Create(Assembly assembly = null)
         {
-            assembly = assembly ?? Assembly.GetEntryAssembly();
-
-            if (assembly == null)
-                return null;
+            assembly??=Assembly.GetEntryAssembly() ?? Assembly.GetCallingAssembly();
 
             var assemblyLocation = assembly.Location;
             var ver = FileVersionInfo.GetVersionInfo(assemblyLocation).ProductVersion;
