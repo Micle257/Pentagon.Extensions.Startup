@@ -115,7 +115,7 @@ namespace Pentagon.Extensions.Startup.Cli
                 }
 
 #if !DEBUG
-                if (Environment.IsDevelopment())
+                if (_environment.IsDevelopment())
                 {
                     Console.WriteLine(value: " Press any key to exit the application...");
                     Console.ReadKey();
