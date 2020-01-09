@@ -11,6 +11,6 @@ namespace Pentagon.Extensions.Startup.Cli {
 
     public static class CliHostBuilder
     {
-        public static IHostBuilder GetDefault(string[] args, Action<CliOptions> configure = null) => Host.CreateDefaultBuilder(args).UseCliApp(args, configure);
+        public static IHostBuilder GetDefault(string[] args, Action<CliStartupOptions> configure = null) => Host.CreateDefaultBuilder(args).UseCliApp(args, configure);
     }
 }

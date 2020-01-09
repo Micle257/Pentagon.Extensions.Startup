@@ -42,9 +42,15 @@
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
   </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.HostBuilderExtensions.UseCliApp(Microsoft.Extensions.Hosting.IHostBuilder,System.String[],System.Action{Pentagon.Extensions.Console.Cli.CliOptions})">
+  <member name="M:Pentagon.Extensions.Startup.Cli.HostBuilderExtensions.UseCliApp(Microsoft.Extensions.Hosting.IHostBuilder,System.String[],System.Action{Pentagon.Extensions.Startup.Cli.CliStartupOptions})">
     <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     <parameter name="builder">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.HostBuilderExtensions.UseCliSerilogLogging(Microsoft.Extensions.Hosting.IHostBuilder,System.String,System.Action{Serilog.LoggerConfiguration})">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="hostBuilder">
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
   </member>

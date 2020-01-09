@@ -14,8 +14,12 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
     using Cli;
     using Console;
     using Console.Cli;
+    using Logging;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Serilog;
+    using Serilog.Debugging;
     using Threading;
     using Console = System.Console;
 
@@ -23,7 +27,11 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
     {
         static Task<int> Main(string[] args)
         {
-            return CliHostBuilder.GetDefault(args).Build().RunCliAsync();
+            var host = CliHostBuilder.GetDefault(args)
+                                     .UseCliSerilogLogging()
+                                                .Build();
+
+            return host.RunCliAsync();
         }
     }
 }
