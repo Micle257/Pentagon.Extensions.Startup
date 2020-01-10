@@ -46,7 +46,7 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <PackageReference Include="Pentagon.Extensions.Console" Version="2.3.0" />
+        <PackageReference Include="Pentagon.Extensions.Console" Version="2.4.0" />
         <PackageReference Include="Pentagon.Extensions.Serilog" Version="2.2.0" />
         <PackageReference Include="Pentagon.Dispatch" Version="1.1.0" />
       </ItemGroup>

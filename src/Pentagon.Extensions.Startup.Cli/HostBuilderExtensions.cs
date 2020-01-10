@@ -35,8 +35,10 @@ namespace Pentagon.Extensions.Startup.Cli
 
                                           collection.AddCliOptionsBase();
 
-                                          collection.Configure<CliStartupOptions>(context.Configuration.GetSection("CliStartup"))
-                                                    .Configure(configure);
+                                          collection.Configure<CliStartupOptions>(context.Configuration.GetSection("CliStartup"));
+
+                                          if (configure != null)
+                                              collection.Configure(configure);
                                       });
 
             return new CliHostBuilderProxy(builder);
