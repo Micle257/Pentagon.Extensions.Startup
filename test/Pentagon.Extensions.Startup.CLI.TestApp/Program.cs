@@ -28,6 +28,7 @@ namespace Pentagon.Extensions.Startup.CLI.TestApp
         static Task<int> Main(string[] args)
         {
             var host = CliHostBuilder.GetDefault(args)
+                                     .UseCliCommandAsOptions<FirstOptions>()
                                      .UseCliSerilogLogging()
                                                 .Build();
 

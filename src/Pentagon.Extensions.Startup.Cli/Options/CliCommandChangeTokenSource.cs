@@ -29,6 +29,6 @@
         }
 
         /// <inheritdoc />
-        public TOptions Options { get; }
+        public TOptions Options { get; set; }
     }
 }

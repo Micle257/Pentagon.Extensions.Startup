@@ -46,7 +46,6 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <PackageReference Include="Pentagon.Extensions.Console" Version="2.4.0" />
         <PackageReference Include="Pentagon.Extensions.Serilog" Version="2.2.0" />
         <PackageReference Include="Pentagon.Dispatch" Version="1.1.0" />
       </ItemGroup>
@@ -54,6 +53,7 @@
   </Choose>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\lib\Pentagon.Extensions.Console\src\Pentagon.Extensions.Console\Pentagon.Extensions.Console.csproj" />
     <ProjectReference Include="..\Pentagon.Extensions.Startup\Pentagon.Extensions.Startup.csproj" />
   </ItemGroup>
 

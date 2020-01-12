@@ -8,13 +8,16 @@ namespace Pentagon.Extensions.Startup.Cli
 {
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
     using Console.Cli;
+    using Helpers;
     using JetBrains.Annotations;
     using Logging;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Options;
     using Serilog;
     using Serilog.Debugging;
     using Serilog.Sinks.SystemConsole.Themes;
@@ -29,7 +32,8 @@ namespace Pentagon.Extensions.Startup.Cli
                                           collection.AddCommandLineArguments(args)
                                                     .AddVersion();
 
-                                          collection.AddCli();
+                                          collection.AddCli()
+                                                    .AddCommandInvokeService<OptionsInvocationCommandService>();
 
                                           collection.AddCliAppHostedService();
 
@@ -108,6 +112,31 @@ namespace Pentagon.Extensions.Startup.Cli
 
                                               StaticLoggingOptions.Options = (loggingOptions?.MethodLogging).GetValueOrDefault() ? MethodLogOptions.All : 0;
                                           });
+        }
+
+        [NotNull]
+        public static IHostBuilder UseCliCommandAsOptions<TOptions>([NotNull] this IHostBuilder hostBuilder)
+                where TOptions : class, new()
+        {
+            return hostBuilder.ConfigureServices((context, services) => services.AddCliOptions<TOptions>());
+        }
+    }
+
+    public class OptionsInvocationCommandService : ICommandInvokeService
+    {
+        readonly ICliOptionsUpdateService _updateService;
+
+        public OptionsInvocationCommandService(ICliOptionsUpdateService updateService)
+        {
+            _updateService = updateService;
+        }
+
+        /// <inheritdoc />
+        public Task ProcessAsync(object command)
+        {
+            _updateService.UpdateOptions( command);
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -15,29 +15,24 @@
         [CliArgument(IsRequired =  false)]
         public string Other { get; set; }
 
-        public class Handler : ICliCommandHandler<FirstOptions>
+        public class Handler : ICliCommandHandler<FirstOptions>, ICliCommandPropertyHandler<FirstOptions>
         {
-            readonly IOptionsMonitor<LolOptions> _optionsMonitor;
+            readonly IOptions<FirstOptions> _options;
             readonly ICliOptionsUpdateService _updateService;
 
-            public Handler(IOptionsMonitor<LolOptions> optionsMonitor,
+            public Handler(
+                           IOptions<FirstOptions> options,
+                           IOptionsMonitor<FirstOptions> optionsMonitor,
                            ICliOptionsUpdateService updateService)
             {
-                _optionsMonitor = optionsMonitor;
+                _options = options;
                 _updateService = updateService;
-
-                _optionsMonitor.OnChange((lolOptions, name) =>
-                                         {
-                                             Console.WriteLine($"Changed: '{name}' value: {lolOptions.Lol ?? "null"}");
-                                         });
             }
 
             /// <inheritdoc />
             public async Task<int> ExecuteAsync(FirstOptions command, CancellationToken cancellationToken)
             {
-                _updateService.UpdateOptions<LolOptions>(o => { o.Lol = "first"; });
-                _updateService.UpdateOptions<LolOptions>(o => { o.Lol = "second"; });
-                _updateService.UpdateOptions<LolOptions>(o => { o.Lol = null; });
+                _updateService.UpdateOptions<FirstOptions>(o => { o.Text = "sdd"; });
 
                 try
                 {
@@ -55,6 +50,9 @@
 
                 return 0;
             }
+
+            /// <inheritdoc />
+            public FirstOptions Command { get; }
         }
     }
 
