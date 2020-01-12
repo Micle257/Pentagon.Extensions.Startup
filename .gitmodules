@@ -1,0 +1,4 @@
+[submodule "lib/Pentagon.Extensions.Console"]
+	path = lib/Pentagon.Extensions.Console
+	url = git@github.com:Micle257/Pentagon.Extensions.Console.git
+	branch = dev
