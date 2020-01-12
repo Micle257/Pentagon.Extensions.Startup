@@ -32,16 +32,14 @@ namespace Pentagon.Extensions.Startup.Cli {
             var serviceType = typeof(ICliOptionsSource<>).MakeGenericType(optionsValue.GetType());
 
             var options = _scope.ServiceProvider.GetServices(serviceType)
-                                .FirstOrDefault(a => ((dynamic)a).Name == name);
+                                .FirstOrDefault(a => (string)a.GetType().GetProperty(nameof(ICliOptionsSource<int>.Name)).GetValue(a) == name);
 
-            if (options == null)
-                return;
+            var propertyInfo = options?.GetType().GetProperty(nameof(ICliOptionsSource<int>.Options));
 
-            var propertyInfo = options.GetType().GetProperty(nameof(ICliOptionsSource<int>.Options));
+            propertyInfo?.SetValue(options, optionsValue);
 
-            propertyInfo.SetValue(options, optionsValue);
-
-            ((dynamic)options).Reload();
+            // options.Reload()
+            options?.GetType().GetMethod(nameof(ICliOptionsSource<int>.Reload), Array.Empty<Type>())?.Invoke(options, Array.Empty<object>());
         }
 
         public void UpdateOptions<TOptions>([CanBeNull] Action<TOptions> updateCallback)

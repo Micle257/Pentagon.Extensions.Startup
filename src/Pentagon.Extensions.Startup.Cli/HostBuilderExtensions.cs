@@ -115,10 +115,16 @@ namespace Pentagon.Extensions.Startup.Cli
         }
 
         [NotNull]
-        public static IHostBuilder UseCliCommandAsOptions<TOptions>([NotNull] this IHostBuilder hostBuilder)
+        public static IHostBuilder UseCliCommandAsOptions<TOptions>([NotNull] this IHostBuilder hostBuilder, string configSectionName = null)
                 where TOptions : class, new()
         {
-            return hostBuilder.ConfigureServices((context, services) => services.AddCliOptions<TOptions>());
+            return hostBuilder.ConfigureServices((context, services) =>
+                                                 {
+                                                     if (configSectionName != null)
+                                                         services.Configure<TOptions>("Config",context.Configuration.GetSection(configSectionName));
+
+                                                     services.AddCliOptions<TOptions>();
+                                                 });
         }
     }
 

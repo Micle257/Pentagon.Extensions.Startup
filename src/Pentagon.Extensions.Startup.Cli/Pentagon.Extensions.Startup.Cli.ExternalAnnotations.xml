@@ -48,7 +48,7 @@
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
   </member>
-  <member name="M:Pentagon.Extensions.Startup.Cli.HostBuilderExtensions.UseCliCommandAsOptions``1(Microsoft.Extensions.Hosting.IHostBuilder)">
+  <member name="M:Pentagon.Extensions.Startup.Cli.HostBuilderExtensions.UseCliCommandAsOptions``1(Microsoft.Extensions.Hosting.IHostBuilder,System.String)">
     <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     <parameter name="hostBuilder">
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
