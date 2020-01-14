@@ -17,15 +17,11 @@
 
         public class Handler : ICliCommandHandler<FirstOptions>, ICliCommandPropertyHandler<FirstOptions>
         {
-            readonly IOptions<FirstOptions> _options;
             readonly ICliOptionsUpdateService _updateService;
 
             public Handler(
-                           IOptions<FirstOptions> options,
-                           IOptionsMonitor<FirstOptions> optionsMonitor,
                            ICliOptionsUpdateService updateService)
             {
-                _options = options;
                 _updateService = updateService;
             }
 
