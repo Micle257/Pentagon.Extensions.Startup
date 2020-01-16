@@ -48,6 +48,12 @@
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     </parameter>
   </member>
+  <member name="M:Pentagon.Extensions.Startup.Cli.HostBuilderExtensions.UseCliCommandAsOptions``1(Microsoft.Extensions.Hosting.IHostBuilder,System.String)">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="hostBuilder">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
   <member name="M:Pentagon.Extensions.Startup.Cli.HostBuilderExtensions.UseCliSerilogLogging(Microsoft.Extensions.Hosting.IHostBuilder,System.String,System.Action{Serilog.LoggerConfiguration})">
     <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
     <parameter name="hostBuilder">

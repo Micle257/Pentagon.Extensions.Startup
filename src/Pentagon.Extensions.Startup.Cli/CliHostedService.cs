@@ -85,7 +85,6 @@ namespace Pentagon.Extensions.Startup.Cli
             if (IsConsole)
             {
                 Console.WriteLine();
-                Console.WriteLine();
 
                 if (!statusCode.IsAnyEqual(StatusCodes.Success, StatusCodes.Cancel))
                 {

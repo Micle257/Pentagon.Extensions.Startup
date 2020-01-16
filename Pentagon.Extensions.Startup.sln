@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pentagon.Extensions.Startup
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pentagon.Extensions.Startup.CLI.TestApp", "test\Pentagon.Extensions.Startup.CLI.TestApp\Pentagon.Extensions.Startup.CLI.TestApp.csproj", "{02C89CA0-1645-4B1D-99D6-FC1547E7CDBB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pentagon.Extensions.Startup.Wpf", "src\Pentagon.Extensions.Startup.Wpf\Pentagon.Extensions.Startup.Wpf.csproj", "{1701DC85-1CA5-43D9-8C58-ED3C41557C83}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pentagon.Extensions.Startup.Wpf", "src\Pentagon.Extensions.Startup.Wpf\Pentagon.Extensions.Startup.Wpf.csproj", "{1701DC85-1CA5-43D9-8C58-ED3C41557C83}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pentagon.Extensions.Console", "lib\Pentagon.Extensions.Console\src\Pentagon.Extensions.Console\Pentagon.Extensions.Console.csproj", "{C91184F3-A9B2-4108-AF33-BE502B823FF5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,6 +87,18 @@ Global
 		{1701DC85-1CA5-43D9-8C58-ED3C41557C83}.Release|x64.Build.0 = Release|Any CPU
 		{1701DC85-1CA5-43D9-8C58-ED3C41557C83}.Release|x86.ActiveCfg = Release|Any CPU
 		{1701DC85-1CA5-43D9-8C58-ED3C41557C83}.Release|x86.Build.0 = Release|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Debug|x64.Build.0 = Debug|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Debug|x86.Build.0 = Debug|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Release|x64.ActiveCfg = Release|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Release|x64.Build.0 = Release|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Release|x86.ActiveCfg = Release|Any CPU
+		{C91184F3-A9B2-4108-AF33-BE502B823FF5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

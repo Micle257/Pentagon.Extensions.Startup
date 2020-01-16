@@ -62,8 +62,6 @@ namespace Pentagon.Extensions.Startup.Cli
                    .AddSingleton<ICliOptionsSource<TOptions>>(tokenSource)
                    .AddSingleton<IOptionsChangeTokenSource<TOptions>>(tokenSource);
 
-            if (configure != null)
-            {
                 services.AddSingleton<IPostConfigureOptions<TOptions>>(c => new PostConfigureOptions<TOptions>(name: name,
                                                                                                                        options =>
                                                                                                                        {
@@ -72,16 +70,32 @@ namespace Pentagon.Extensions.Startup.Cli
 
                                                                                                                            var cliOptions = source?.Options;
 
-                                                                                                                           configure(original: options, cli: cliOptions);
+                                                                                                                           if (configure != null)
+                                                                                                                               configure(original: options, cli: cliOptions);
+                                                                                                                           else
+                                                                                                                              TypeHelper.MapAutoProperties(options, cliOptions);
                                                                                                                        }));
-            }
 
             return services;
         }
+
+       
 
         [NotNull]
         public static IServiceCollection AddCliOptions<TOptions>([NotNull] this IServiceCollection services, CliOptionsDelegate<TOptions> configure = null)
                 where TOptions : class, new() =>
                 AddCliOptions(services: services, null, configure: configure);
+    }
+
+    static class TypeHelper
+    {
+      public   static void MapAutoProperties<TOptions>(TOptions options, TOptions cliOptions)
+                where TOptions : class, new()
+        {
+            foreach (var autoProperty in typeof(TOptions).GetAutoProperties())
+            {
+                autoProperty.SetValue(options, autoProperty.GetValue(cliOptions));
+            }
+        }
     }
 }
