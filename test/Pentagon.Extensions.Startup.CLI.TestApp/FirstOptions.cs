@@ -15,7 +15,7 @@
         [CliArgument(IsRequired =  false)]
         public string Other { get; set; }
 
-        public class Handler : ICliCommandHandler<FirstOptions>, ICliCommandPropertyHandler<FirstOptions>
+        public class Handler : ICliCommandPropertyHandler<FirstOptions>
         {
             readonly ICliOptionsUpdateService _updateService;
 
@@ -26,7 +26,7 @@
             }
 
             /// <inheritdoc />
-            public async Task<int> ExecuteAsync(FirstOptions command, CancellationToken cancellationToken)
+            public async Task<int> ExecuteAsync(CancellationToken cancellationToken)
             {
                 _updateService.UpdateOptions<FirstOptions>(o => { o.Text = "sdd"; });
 
